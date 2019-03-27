@@ -1,0 +1,23 @@
+# model values
+num_classes: 10
+img_height: 224
+img_width: 224
+
+# training values
+batch_size: 8
+epochs: 5
+steps_per_epoch: 625
+validation_steps: 32
+learning_rate: 1.e-2
+use_eval: false
+train_data_path: './data/train'
+eval_data_path: './data/eval'
+#pretrained_weights: 'ssd-pretrained-weights.h5'
+
+# storage parameter
+log_dir: 'output/log/'
+checkpoint_dir: 'output/checkpoints/'
+checkpoint_file: 'checkpoint.hdf5'
+weights_file: 'output/ssd-weights.h5'
+model_file: 'output/ssd-model.hdf5'
+
