@@ -1,12 +1,12 @@
 # model values
-num_classes: 10
-img_height: 224
+num_classes: 80
 img_width: 224
+img_height: 224
 
 # training values
 batch_size: 8
-epochs: 5
-steps_per_epoch: 625
+epochs: 2
+steps_per_epoch: 10
 validation_steps: 32
 learning_rate: 1.e-2
 use_eval: false
