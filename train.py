@@ -3,6 +3,7 @@ import yaml
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.utils import plot_model
 
 from model.loss import Loss
 from model.ssd import SSD
@@ -17,6 +18,8 @@ def main():
 
     generator = create_generator(config)
     ssd_model = SSD().build_model()
+    print_model(ssd_model)
+    # ssd_model = SSD().get_resnet()
     ssd_loss = Loss()
 
     print('Compile Model for Training')
@@ -69,6 +72,10 @@ def load_config_file(config_file: str = 'config.yml'):
             return yaml.load(stream)
         except yaml.YAMLError as ex:
             print(ex)
+
+
+def print_model(model, filename='model.png'):
+    plot_model(model, to_file=filename)
 
 
 if __name__ == "__main__":

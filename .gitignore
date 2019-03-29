@@ -25,3 +25,5 @@ venv.bak/
 
 # build dirs
 output/
+example/
+model.png
