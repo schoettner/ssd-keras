@@ -8,7 +8,7 @@ class L2Normalization(Layer):
     """
     Since Keras does not provide a L2Normalization Layer, this is added.
     It learns its scaling factor as trainable parameter.
-    The SSD paper suggests to init the scaling with 20 (see section 3.1 PASCAL VOC2007)
+    The SSD paper suggests to init the scaling with 20 (see section 3.1 PASCAL VOC2007, page 7)
 
     Arguments:
         scale_init: The initial scaling parameter. Default is 20
@@ -26,24 +26,25 @@ class L2Normalization(Layer):
 
     def __init__(self, scale_init=20, **kwargs):
         self.scale_init = scale_init
-        self.axis = 3  # normalize of the channel
+        self.scale = None
+        self.axis = 3  # normalize over the channel
         super(L2Normalization, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.input_spec = [InputSpec(shape=input_shape)]
-        gamma = self.scale_init * tf.ones((input_shape[self.axis],))
-        self.gamma = K.variable(gamma, name='{}_gamma'.format(self.name))
-        self._trainable_weights = [self.gamma]
+        scale = self.scale_init * tf.ones((input_shape[self.axis],))
+        self.scale = K.variable(scale, name='{}_scale'.format(self.name))
+        self._trainable_weights = [self.scale]
         super(L2Normalization, self).build(input_shape)
 
     def call(self, x, mask=None):
         output = K.l2_normalize(x, self.axis)
-        output *= self.gamma
+        output *= self.scale
         return output
 
     def get_config(self):
         config = {
-            'gamma_init': self.gamma_init
+            'scale_init': self.scale_init
         }
         base_config = super(L2Normalization, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))

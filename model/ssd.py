@@ -67,6 +67,7 @@ class SSD:
             # fc7 is the last layer from the base network.
 
             # further conv layer for more scales
+            # 2.1 Model - multi-scale feature maps for detection (ssd paper page 3)
             conv6_1 = Conv2D(256, (1, 1), activation='relu', padding='same', name='conv6_1')(fc7)
             conv6_1 = ZeroPadding2D(padding=((1, 1), (1, 1)), name='conv6_padding')(conv6_1)
             conv6_2 = Conv2D(512, (3, 3), strides=(2, 2), activation='relu', padding='valid', name='conv6_2')(conv6_1)
