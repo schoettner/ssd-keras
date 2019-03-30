@@ -2,7 +2,9 @@ from tensorflow.python.keras import Input
 from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten
 from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers.normalization import BatchNormalization
+from tensorflow.python.layers.base import Layer
+
+from model.l2_normalization import L2Normalization
 
 
 class SSD:
@@ -80,8 +82,7 @@ class SSD:
             conv9_2 = Conv2D(256, (3, 3), activation='relu', padding='valid', name='conv9_2')(conv9_1)
 
             # train.prototxt line 940
-            # todo add l2 normalization layer instead of batch norm
-            conv4_3_norm = BatchNormalization(name='conv4_3_norm')(conv4_3)
+            conv4_3_norm = L2Normalization(name='conv4_3_norm')(conv4_3)
 
             # mbox_loc
             conv4_3_norm_loc_block = self.build_mbox_block(block_input=conv4_3_norm,
@@ -95,7 +96,7 @@ class SSD:
                                                        block_name='conv4_3_norm',
                                                        block_type='conf')
 
-            return [conv9_2]
+            return [conv9_2, conv4_3_norm_loc_block, conv4_3_conf_block]
 
         else:
             raise NotImplementedError('The selected base network: %s, is not supported ' % self.base_network)
