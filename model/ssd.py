@@ -1,10 +1,10 @@
-from tensorflow.python.keras import Input
 from tensorflow.keras.applications import ResNet50
+from tensorflow.python.keras import Input
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten
 from tensorflow.python.keras.models import Model
 from tensorflow.python.layers.base import Layer
 
-from model.l2_normalization import L2Normalization
+from model.l2_normalization_layer import L2Normalization
 
 
 class SSD:
@@ -16,6 +16,19 @@ class SSD:
         self.img_width = 300
         self.img_height = 300
         self.channels = 3
+        self.aspect_ratios_per_layer = [[1.0, 2.0, 0.5],
+                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+                                        [1.0, 2.0, 0.5],
+                                        [1.0, 2.0, 0.5]]
+        self.num_bboxes_per_layer = []
+        for layer in self.aspect_ratios_per_layer:
+            if 1 in layer:
+                # add s´k if 1 is included (ssd paper page 6)
+                self.num_bboxes_per_layer.append(len(layer) + 1)
+            else:
+                self.num_bboxes_per_layer.append(len(layer))
 
     def get_resnet(self):
         """
@@ -82,32 +95,49 @@ class SSD:
             conv9_1 = Conv2D(128, (1, 1), activation='relu', padding='same', name='conv9_1')(conv8_2)
             conv9_2 = Conv2D(256, (3, 3), activation='relu', padding='valid', name='conv9_2')(conv9_1)
 
-            # train.prototxt line 940
             conv4_3_norm = L2Normalization(name='conv4_3_norm')(conv4_3)
 
-            # mbox_loc
-            conv4_3_norm_loc_block = self.build_mbox_block(block_input=conv4_3_norm,
-                                                           num_output=16,
-                                                           block_name='conv4_3_norm',
-                                                           block_type='loc')
+            ### instead of creating blocks with a permute and flatten, we only use the plain conv  at this point
 
-            # mbox_conf
-            conv4_3_conf_block = self.build_mbox_block(block_input=conv4_3_norm,
-                                                       num_output=84,
-                                                       block_name='conv4_3_norm',
-                                                       block_type='conf')
+            # create the location for each feature map. each box has 4 parameters ∆(cx, cy, w, h)
+            # Output shape of the localization layers: (batch, feature_map_width, feature_map_height, n_boxes * 4)
+            conv4_3_norm_mbox_loc = Conv2D(self.num_bboxes_per_layer[0] * 4, (3, 3), padding='same', name='conv4_3_norm_mbox_loc')(conv4_3_norm)
+            fc7_mbox_loc = Conv2D(self.num_bboxes_per_layer[1] * 4, (3, 3), padding='same', name='fc7_mbox_loc')(fc7)
+            conv6_2_mbox_loc = Conv2D(self.num_bboxes_per_layer[2] * 4, (3, 3), padding='same', name='conv6_2_mbox_loc')(conv6_2)
+            conv7_2_mbox_loc = Conv2D(self.num_bboxes_per_layer[3] * 4, (3, 3), padding='same', name='conv7_2_mbox_loc')(conv7_2)
+            conv8_2_mbox_loc = Conv2D(self.num_bboxes_per_layer[4] * 4, (3, 3), padding='same', name='conv8_2_mbox_loc')(conv8_2)
+            conv9_2_mbox_loc = Conv2D(self.num_bboxes_per_layer[5] * 4, (3, 3), padding='same', name='conv9_2_mbox_loc')(conv9_2)
 
-            return [conv9_2, conv4_3_norm_loc_block, conv4_3_conf_block]
+            # create the confidence for each feature map. each box has the same number of classes (c1, c2, · · · , cp)
+            # Output shape of the confidence layers: (batch, feature_map_width, feature_map_height, self.num_bboxes_per_layer * num_classes)
+            conv4_3_norm_mbox_conf = Conv2D(self.num_bboxes_per_layer[0] * self.num_classes, (3, 3), padding='same', name='conv4_3_norm_mbox_conf')(conv4_3_norm)
+            fc7_mbox_conf = Conv2D(self.num_bboxes_per_layer[1] * self.num_classes, (3, 3), padding='same', name='fc7_mbox_conf')(fc7)
+            conv6_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[2] * self.num_classes, (3, 3), padding='same', name='conv6_2_mbox_conf')(conv6_2)
+            conv7_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[3] * self.num_classes, (3, 3), padding='same', name='conv7_2_mbox_conf')(conv7_2)
+            conv8_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[4] * self.num_classes, (3, 3), padding='same', name='conv8_2_mbox_conf')(conv8_2)
+            conv9_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[5] * self.num_classes, (3, 3), padding='same', name='conv9_2_mbox_conf')(conv9_2)
+
+
+            return [conv9_2, conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf]
 
         else:
             raise NotImplementedError('The selected base network: %s, is not supported ' % self.base_network)
 
-    def build_mbox_block(self,
-                         block_input: Layer,
-                         num_output: int,
-                         block_name: str,
-                         block_type: str = 'loc',
-                         ):
+    @staticmethod
+    def build_legacy_mbox_block(block_input: Layer,
+                                num_output: int,
+                                block_name: str,
+                                block_type: str = 'loc'):
+        """
+        builds the mbox block as described in the caffe implementation in train.prototext (starting in line 955)
+        however, the permute and flatten are not used in this implementation.
+
+        :param block_input: input layer of the block
+        :param num_output: amount of filters in the convolution layer = number of expected outputs
+        :param block_name: the name of the block. given by the input convolution = the feature map of the block
+        :param block_type: 'loc' for the location block, 'conf' for the confidence block
+        :return: the output layer of the block as flat vector
+        """
         mbox = Conv2D(num_output, (3, 3), activation=None, padding='same', name='{}_mbox_{}'.format(block_name, block_type))(block_input)
         mbox_perm = Permute(dims=(1, 3, 2), name='{}_mbox_{}_perm'.format(block_name, block_type))(mbox)
         mbox_flat = Flatten(name='{}_mbox_{}_flat'.format(block_name, block_type))(mbox_perm)
