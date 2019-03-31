@@ -1,6 +1,7 @@
 from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras import Input
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten, Concatenate, \
+    concatenate
 from tensorflow.python.keras.models import Model
 from tensorflow.python.layers.base import Layer
 
@@ -16,6 +17,7 @@ class SSD:
         self.img_width = 300
         self.img_height = 300
         self.channels = 3
+        # default in ssd is: 1, 2, 3, 1/2, 1/3 == 6 boxes (incl s'k)
         self.aspect_ratios_per_layer = [[1.0, 2.0, 0.5],
                                         [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
                                         [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
@@ -117,8 +119,14 @@ class SSD:
             conv8_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[4] * self.num_classes, (3, 3), padding='same', name='conv8_2_mbox_conf')(conv8_2)
             conv9_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[5] * self.num_classes, (3, 3), padding='same', name='conv9_2_mbox_conf')(conv9_2)
 
-
-            return [conv9_2, conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf]
+            # do not use the prior boxes here. instead, create multiple scales. each scale has an own output
+            scale1 = concatenate([conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf], axis=3, name='scale1_prediction')
+            scale2 = concatenate([fc7_mbox_loc, fc7_mbox_conf], axis=3, name='scale2_prediction')
+            scale3 = concatenate([conv6_2_mbox_loc, conv6_2_mbox_conf], axis=3, name='scale3_prediction')
+            scale4 = concatenate([conv7_2_mbox_loc, conv7_2_mbox_conf], axis=3, name='scale4_prediction')
+            scale5 = concatenate([conv8_2_mbox_loc, conv8_2_mbox_conf], axis=3, name='scale5_prediction')
+            scale6 = concatenate([conv9_2_mbox_loc, conv9_2_mbox_conf], axis=3, name='scale6_prediction')
+            return [scale1, scale2, scale3, scale4, scale5, scale6]
 
         else:
             raise NotImplementedError('The selected base network: %s, is not supported ' % self.base_network)
