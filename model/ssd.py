@@ -2,6 +2,7 @@ from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras import Input
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten, Concatenate, \
     concatenate
+from tensorflow.python.keras.layers.core import Reshape
 from tensorflow.python.keras.models import Model
 from tensorflow.python.layers.base import Layer
 
@@ -119,14 +120,29 @@ class SSD:
             conv8_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[4] * self.num_classes, (3, 3), padding='same', name='conv8_2_mbox_conf')(conv8_2)
             conv9_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[5] * self.num_classes, (3, 3), padding='same', name='conv9_2_mbox_conf')(conv9_2)
 
+            # reshape the conv to bounding box index
+            # todo calculate scales instead of fix value
+            scale1_loc = Reshape([38, 38, self.num_bboxes_per_layer[0], 4], name='reshape_scale1_loc')(conv4_3_norm_mbox_loc)
+            scale2_loc = Reshape([19, 19, self.num_bboxes_per_layer[1], 4], name='reshape_scale2_loc')(fc7_mbox_loc)
+            scale3_loc = Reshape([10, 10, self.num_bboxes_per_layer[2], 4], name='reshape_scale3_loc')(conv6_2_mbox_loc)
+            scale4_loc = Reshape([5,   5, self.num_bboxes_per_layer[3], 4], name='reshape_scale4_loc')(conv7_2_mbox_loc)
+            scale5_loc = Reshape([3,   3, self.num_bboxes_per_layer[4], 4], name='reshape_scale5_loc')(conv8_2_mbox_loc)
+            scale6_loc = Reshape([1,   1, self.num_bboxes_per_layer[5], 4], name='reshape_scale6_loc')(conv9_2_mbox_loc)
+            scale1_conf = Reshape([38, 38, self.num_bboxes_per_layer[0], self.num_classes], name='reshape_scale1_conf')(conv4_3_norm_mbox_conf)
+            scale2_conf = Reshape([19, 19, self.num_bboxes_per_layer[1], self.num_classes], name='reshape_scale2_conf')(fc7_mbox_conf)
+            scale3_conf = Reshape([10, 10, self.num_bboxes_per_layer[2], self.num_classes], name='reshape_scale3_conf')(conv6_2_mbox_conf)
+            scale4_conf = Reshape([5,   5, self.num_bboxes_per_layer[3], self.num_classes], name='reshape_scale4_conf')(conv7_2_mbox_conf)
+            scale5_conf = Reshape([3,   3, self.num_bboxes_per_layer[4], self.num_classes], name='reshape_scale5_conf')(conv8_2_mbox_conf)
+            scale6_conf = Reshape([1,   1, self.num_bboxes_per_layer[5], self.num_classes], name='reshape_scale6_conf')(conv9_2_mbox_conf)
+
             # do not use the prior boxes here. instead, create multiple scales. each scale has an own output
             # hint: do not use the Concatenate layer since it seems to have an bug. use the concatenate function instead
-            scale1 = concatenate([conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf], axis=3, name='scale1_prediction')
-            scale2 = concatenate([fc7_mbox_loc, fc7_mbox_conf], axis=3, name='scale2_prediction')
-            scale3 = concatenate([conv6_2_mbox_loc, conv6_2_mbox_conf], axis=3, name='scale3_prediction')
-            scale4 = concatenate([conv7_2_mbox_loc, conv7_2_mbox_conf], axis=3, name='scale4_prediction')
-            scale5 = concatenate([conv8_2_mbox_loc, conv8_2_mbox_conf], axis=3, name='scale5_prediction')
-            scale6 = concatenate([conv9_2_mbox_loc, conv9_2_mbox_conf], axis=3, name='scale6_prediction')
+            scale1 = concatenate([scale1_loc, scale1_conf], axis=4, name='scale1_prediction')
+            scale2 = concatenate([scale2_loc, scale2_conf], axis=4, name='scale2_prediction')
+            scale3 = concatenate([scale3_loc, scale3_conf], axis=4, name='scale3_prediction')
+            scale4 = concatenate([scale4_loc, scale4_conf], axis=4, name='scale4_prediction')
+            scale5 = concatenate([scale5_loc, scale5_conf], axis=4, name='scale5_prediction')
+            scale6 = concatenate([scale6_loc, scale6_conf], axis=4, name='scale6_prediction')
             return [scale1, scale2, scale3, scale4, scale5, scale6]
 
         else:

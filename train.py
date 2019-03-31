@@ -55,15 +55,23 @@ def main():
 
 
 def create_generator(config):
+    batch_size = config['batch_size']
     while 1:
-        x = np.random.rand(config['batch_size'],
+
+        x = np.random.rand(batch_size,
                            config['img_width'],
                            config['img_height'],
                            3)
 
-        y = np.random.randint(config['num_classes'],
-                              size=config['batch_size'])
-        yield x, y
+        # y = np.random.randint(config['num_classes'],
+        #                       size=config['batch_size'])
+        y1 = np.random.rand(batch_size, 38, 38, 4, 84)
+        y2 = np.random.rand(batch_size, 19, 19, 6, 84)
+        y3 = np.random.rand(batch_size, 10, 10, 6, 84)
+        y4 = np.random.rand(batch_size, 5, 5, 6, 84)
+        y5 = np.random.rand(batch_size, 3, 3, 4, 84)
+        y6 = np.random.rand(batch_size, 1, 1, 4, 84)
+        yield x, [y1, y2, y3, y4, y5, y6]
 
 
 def load_config_file(config_file: str = 'config.yml'):
