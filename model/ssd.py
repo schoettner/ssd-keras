@@ -120,6 +120,7 @@ class SSD:
             conv9_2_mbox_conf = Conv2D(self.num_bboxes_per_layer[5] * self.num_classes, (3, 3), padding='same', name='conv9_2_mbox_conf')(conv9_2)
 
             # do not use the prior boxes here. instead, create multiple scales. each scale has an own output
+            # hint: do not use the Concatenate layer since it seems to have an bug. use the concatenate function instead
             scale1 = concatenate([conv4_3_norm_mbox_loc, conv4_3_norm_mbox_conf], axis=3, name='scale1_prediction')
             scale2 = concatenate([fc7_mbox_loc, fc7_mbox_conf], axis=3, name='scale2_prediction')
             scale3 = concatenate([conv6_2_mbox_loc, conv6_2_mbox_conf], axis=3, name='scale3_prediction')
