@@ -33,18 +33,6 @@ class SSD:
             else:
                 self.num_bboxes_per_layer.append(len(layer))
 
-    def get_resnet(self):
-        """
-        return a resnet 50 for demo purposes
-        """
-        model = ResNet50(include_top=True,
-                         weights=None,
-                         input_tensor=None,
-                         input_shape=None,
-                         pooling=None,
-                         classes=self.num_classes)
-        return model
-
     def build_model(self):
         model_input = Input(shape=(self.img_width, self.img_height, self.channels))
         base_network = self.build_base_network(input=model_input)

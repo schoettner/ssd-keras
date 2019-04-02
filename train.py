@@ -19,7 +19,6 @@ def main():
     generator = create_generator(config)
     ssd_model = SSD().build_model()
     print_model(ssd_model)
-    # ssd_model = SSD().get_resnet()
     ssd_loss = Loss()
 
     print('Compile Model for Training')
