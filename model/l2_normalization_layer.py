@@ -1,7 +1,7 @@
+import tensorflow as tf
+import tensorflow.keras.backend as K
 from tensorflow.python.keras.engine import InputSpec
 from tensorflow.python.layers.base import Layer
-import tensorflow.keras.backend as K
-import tensorflow as tf
 
 
 class L2Normalization(Layer):

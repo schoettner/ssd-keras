@@ -1,21 +1,22 @@
 import os
-import yaml
+import sys
 
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras.utils import plot_model
 
 from model.loss import Loss
 from model.ssd import SSD
+from preprocessor.pre_processor import PreProcessor
+from util.utils import load_config_file, print_model
 
 
-def main():
+def main(config_file: str):
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    config = load_config_file()
+    config = load_config_file(config_file)
     os.makedirs(config['log_dir'], exist_ok=True)
     os.makedirs(config['checkpoint_dir'], exist_ok=True)
 
+    # init objects
     generator = create_generator(config)
     ssd_model = SSD().build_model()
     print_model(ssd_model)
@@ -27,12 +28,12 @@ def main():
                       metrics=['acc'])
     ssd_model.summary()
 
-    loss_to_monitor = 'val_los' if config['use_eval'] else 'loss'
+    loss_to_monitor = 'val_loss' if config['use_eval'] else 'loss'
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=config['log_dir']),
         tf.keras.callbacks.EarlyStopping(patience=2,
                                          monitor=loss_to_monitor),
-        tf.keras.callbacks.ModelCheckpoint(filepath=config['checkpoint_dir']+config['checkpoint_file'],
+        tf.keras.callbacks.ModelCheckpoint(filepath=config['checkpoint_dir'] + config['checkpoint_file'],
                                            monitor=loss_to_monitor,
                                            verbose=0,
                                            save_best_only=True,
@@ -54,36 +55,13 @@ def main():
 
 
 def create_generator(config):
-    batch_size = config['batch_size']
-    while 1:
-
-        x = np.random.rand(batch_size,
-                           config['img_width'],
-                           config['img_height'],
-                           3)
-
-        # y = np.random.randint(config['num_classes'],
-        #                       size=config['batch_size'])
-        y1 = np.random.rand(batch_size, 38, 38, 4, 84)
-        y2 = np.random.rand(batch_size, 19, 19, 6, 84)
-        y3 = np.random.rand(batch_size, 10, 10, 6, 84)
-        y4 = np.random.rand(batch_size, 5, 5, 6, 84)
-        y5 = np.random.rand(batch_size, 3, 3, 4, 84)
-        y6 = np.random.rand(batch_size, 1, 1, 4, 84)
-        yield x, [y1, y2, y3, y4, y5, y6]
-
-
-def load_config_file(config_file: str = 'config.yml'):
-    with open(config_file, 'r') as stream:
-        try:
-            return yaml.load(stream)
-        except yaml.YAMLError as ex:
-            print(ex)
-
-
-def print_model(model, filename='model.png'):
-    plot_model(model, to_file=filename)
+    return PreProcessor(config).get_random_training_generator()
 
 
 if __name__ == "__main__":
-    main()
+    # could also use len(sys.argv) to check if there is an argument
+    try:
+        config_file = sys.argv[1]
+    except IndexError:
+        config_file = 'config.yml'
+    main(config_file)

@@ -1,10 +1,9 @@
-from tensorflow.keras.applications import ResNet50
+import tensorflow.keras.backend as K
 from tensorflow.python.keras import Input
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D, Permute, Flatten, concatenate
 from tensorflow.python.keras.layers.core import Reshape
 from tensorflow.python.keras.models import Model
 from tensorflow.python.layers.base import Layer
-import tensorflow.keras.backend as K
 
 from model.l2_normalization_layer import L2Normalization
 

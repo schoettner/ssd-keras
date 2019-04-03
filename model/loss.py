@@ -14,8 +14,8 @@ class Loss:
         """
         ignore the 1/N since it is a linear factor that only requires calc time without purpose
         """
-        l_loc = self._calculate_smooth_L1_loss(y_true[:, :4], y_pred[:, :4])  # first 4 values
-        l_conf = self._calculate_softmax_loss(y_true[:, 4:], y_pred[:, 4:])  # starting with the 5th to the end
+        l_loc = tf.to_float(self._calculate_smooth_L1_loss(y_true[:, :4], y_pred[:, :4]))  # first 4 values
+        l_conf = tf.to_float(self._calculate_softmax_loss(y_true[:, 4:], y_pred[:, 4:]))  # starting with the 5th
         return l_conf + self.alpha * l_loc
 
     @staticmethod
@@ -42,4 +42,5 @@ class Loss:
         :param y_pred: class predictions from prediction
         :return: loss as scalar
         """
+        # todo this is not like the SSD paper suggests
         return categorical_crossentropy(y_true, y_pred)
