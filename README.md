@@ -1,8 +1,28 @@
 # SSD-Keras #
-Implementation of SSD (Single Shot MultiBox Detector) with [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) backend.
+Implementation of [SSD](https://arxiv.org/abs/1512.02325) (Single Shot MultiBox Detector) with [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) backend.
+The implementation is also heavily motivated by [YOLOv3](https://arxiv.org/abs/1804.02767).
 
-### Work in progress ###
-Not to much done yet
+### Pre-Processor ###
+The pre processor is responsible to read image files and the labels. They are then converted to *(x, y_true)* with the
+help of an encoder.
+
+### Training ###
+For the moment, the implementation supports only a SSD300. 
+
+
+### Image format ###
+I decided to use a PIL based image loading due to the fact that the *(width, height, channel)* shape appears more natural to me
+and hence helps me to keep up with the dimensions of the network. And with [Pillow-SIMD](https://github.com/uploadcare/pillow-simd#pillow-simd)
+the performance gap to OpenCV is not that big anymore.
+
+### Todo ###
+- [x] Implement SSD300
+- [x] Implement random data generator
+- [ ] Implement pre-processor
+- [ ] Implement post-processor
+- [ ] Implement prediction
+- [ ] Add documentation
+
 
 ### References ###
 [SSD Paper](https://arxiv.org/abs/1512.02325)  
@@ -10,4 +30,5 @@ Not to much done yet
 [SSD-Keras example fork](https://github.com/lvaleriu/ssd_keras-1)  
 [SSD with tensorflow blog](https://lambdalabs.com/blog/how-to-implement-ssd-object-detection-in-tensorflow/)  
 [Netscope to visualize caffe model](https://dgschwend.github.io/netscope/#/editor)  
-
+[PIL vs OpenCV](https://www.kaggle.com/vfdev5/pil-vs-opencv)
+[Pillow Performance](https://python-pillow.org/pillow-perf/)
