@@ -1,4 +1,4 @@
-# SSD-Keras #
+# SSD-Keras [![Build Status](https://travis-ci.org/schoettner/ssd-keras.svg?branch=master)](https://travis-ci.org/schoettner/ssd-keras)
 Implementation of [SSD](https://arxiv.org/abs/1512.02325) (Single Shot MultiBox Detector) with [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) backend.
 The implementation is also heavily motivated by [YOLOv3](https://arxiv.org/abs/1804.02767).
 
