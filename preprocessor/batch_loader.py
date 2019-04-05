@@ -1,3 +1,7 @@
+from PIL import Image
+import numpy as np
+
+
 class BatchLoader(object):
     """
     load a batch of x, y
@@ -16,7 +20,9 @@ class BatchLoader(object):
         :return: numpy array of the image in shape=(width, height, 3) and dtype=float32
                  or None if the file could not be loaded
         """
-        return None
+        img = Image.open(img)
+        img = img.resize(size=(img_width, img_height))
+        return np.array(img, dtype=np.float32)
 
     @staticmethod
     def load_label(label: str):
@@ -28,4 +34,5 @@ class BatchLoader(object):
         :return: numpy array of the labels in shape=(num_boxes, 5) and dtpye=int32
                  or None if the file could not be loaded
         """
-        return None
+        label = np.loadtxt(label, delimiter=',', dtype=np.int32)  # load label in a row vector
+        return label.reshape((-1, 5))  # reshape to a row matrix with 5 cols
