@@ -17,10 +17,13 @@ the performance gap to OpenCV is not that big anymore.
 
 ### Todo ###
 - [x] Implement SSD300
+- [x] Implement first version of loss function
 - [x] Implement random data generator
 - [ ] Implement pre-processor
 - [ ] Implement post-processor
 - [ ] Implement prediction
+- [ ] Implement full version of loss function
+- [ ] Verify that the model trains and predicts correct without priori box
 - [ ] Add documentation
 
 
