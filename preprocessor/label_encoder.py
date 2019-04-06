@@ -38,6 +38,10 @@ class LabelEncoder(object):
         :param label:
         :return:
         """
+        y_true = []
+        for feature_map_number, _ in enumerate(self.feature_map_sizes):
+            y_true.append(self.create_scale(feature_map_number))
+        return y_true
 
     def create_scale(self, feature_map_number: int):
         """
@@ -55,7 +59,17 @@ class LabelEncoder(object):
                        4+self.num_classes)
         return np.zeros(shape=scale_shape, dtype=np.float32)
 
-    def calculate_jaccard_overlap(self, first_box: np.ndarray, second_box: np.ndarray):
+    def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
+        """
+        simple IOU (intersection of union) calculation
+        iou = (Area of overlap) / (Area of union)
+        calculate for whole scale at once? all scales at once?
+        call incoming. brb
+
+        :return:
+        """
+
+
         return 0
 
     def get_box_label(self):
@@ -63,6 +77,13 @@ class LabelEncoder(object):
 
     def set_true_boxes(self):
         return None
+
+    def generate_bbox_geometry(self):
+        """
+        generate the the matrix of all possible bboxes with their absolute coordinates
+        :return:
+        """
+        return 0
 
     @staticmethod
     def calculate_num_boxes_per_layer(ratios: np.ndarray):

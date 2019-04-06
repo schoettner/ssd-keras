@@ -19,8 +19,8 @@ class BatchLoader(object):
             self.validate_files()
 
         total_image_count = len(self.files)  # total amount of input files
-        self.last_possible_index = total_image_count - 1
-        self.last_full_batch_index = total_image_count - total_image_count % batch_size - 1
+        self.last_possible_index = total_image_count - 1  # last valid index to check if you run through the list
+        self.last_full_batch_index = total_image_count - total_image_count % batch_size - 1  # last index hat has a full batch
         self.file_index = 0  # keep track of the current position in the file index
 
     def validate_files(self):
@@ -48,17 +48,15 @@ class BatchLoader(object):
         for _ in range(self.batch_size):
             img_file = self.files[self.file_index]
             label_file = img_file[:-3] + 'txt'
-            x.append(self.load_image(img_file))  # add image to batch
-            y.append(self.load_label(label_file))  # add label to batch
+            resized_image, input_width, input_height = self.load_image(img_file)
+            x.append(resized_image)  # add image to batch
+            y.append(self.load_label(label_file, origin_width=input_width, origin_height=input_height))  # add label to batch
             self.file_index += 1  # move the pointer forward
 
         # check if the next for loop has enough files for a full batch
         if self.file_index == self.last_full_batch_index or self.file_index == self.last_possible_index:
-            self.file_index = 0  # reset the set
-            # todo shuffle the list new. this is kind of a bad spot because it delays the return
-            # thats the end for today. thanks for joining
+            self.file_index = 0  # reset the files for a new epoch
         return x, y
-
 
     @staticmethod
     def load_image(img: str, img_width: int = 300, img_height: int = 300):
@@ -72,18 +70,34 @@ class BatchLoader(object):
                  or None if the file could not be loaded
         """
         img = Image.open(img)
+        width, height = img.size
         img = img.resize(size=(img_width, img_height))
-        return np.array(img, dtype=np.float32)
+        return np.array(img, dtype=np.float32), width, height
 
     @staticmethod
-    def load_label(label: str):
+    def load_label(label: str,
+                   origin_width: int, origin_height: int,
+                   destination_width: int = 300, destination_height: int = 300):
         """
         load the label text file with the bounding box details. one file can contain multiple boxes
+        the coordinates are also mapped to the resized image
         input format in file class_1, x_min_1, y_min_1, x_max_1, y_max_1, class_2, ...
         the label will be processed by the encoder later
         :param label: path to the text file
+        :param origin_width: width of input image
+        :param origin_height: height of input image
+        :param destination_width: width of resized image
+        :param destination_height: height of resized image
         :return: numpy array of the labels in shape=(num_boxes, 5) and dtpye=int32
                  or None if the file could not be loaded
         """
-        label = np.loadtxt(label, delimiter=',', dtype=np.int32)  # load label in a row vector
-        return label.reshape((-1, 5))  # reshape to a row matrix with 5 cols
+        # compute the coordination scale factors
+        width_scale = destination_width / origin_width
+        height_scale = destination_height / origin_height
+        # load label in a row vector and then convert to matrix with 5 cols
+        label = np.loadtxt(label, delimiter=',')
+        reshaped_label = label.reshape((-1, 5))
+        # convert bounding box to resized image
+        reshaped_label[:, [1, 3]] *= width_scale
+        reshaped_label[:, [2, 4]] *= height_scale
+        return reshaped_label.astype(np.int32)
