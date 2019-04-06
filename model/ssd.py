@@ -17,7 +17,7 @@ class SSD:
         self.img_width = 300
         self.img_height = 300
         self.channels = 3
-        # default in ssd is: 1, 2, 3, 1/2, 1/3 == 6 boxes (incl s'k)
+        # default in ssd is: 1, 2, 3, 1/2, 1/3 == 6 boxes (incl s'k) and 6 scales
         self.aspect_ratios_per_layer = [[1.0, 2.0, 0.5],
                                         [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
                                         [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
