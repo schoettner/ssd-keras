@@ -43,20 +43,22 @@ class LabelEncoder(object):
             y_true.append(self.create_scale(feature_map_number))
         return y_true
 
-    def create_scale(self, feature_map_number: int):
+    def create_scale(self, feature_map_number: int, include_classes: bool = True):
         """
         create y_true for the scale. everything is initialized with zeros as float32
         :param feature_map_number: the number of the feature map [0, n]
+        :param include_classes: check if the map should include the class prediction or not
         :return:
         """
         feature_map_width = self.feature_map_sizes[feature_map_number][0]
         feature_map_height = self.feature_map_sizes[feature_map_number][1]
         boxes_of_feature_map = self.num_bboxes_per_layer[feature_map_number]
+        vector_size = 4 + self.num_classes if include_classes else 4
 
         scale_shape = (feature_map_width,
                        feature_map_height,
                        boxes_of_feature_map,
-                       4+self.num_classes)
+                       vector_size)
         return np.zeros(shape=scale_shape, dtype=np.float32)
 
     def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
@@ -78,12 +80,6 @@ class LabelEncoder(object):
     def set_true_boxes(self):
         return None
 
-    def generate_bbox_geometry(self):
-        """
-        generate the the matrix of all possible bboxes with their absolute coordinates
-        :return:
-        """
-        return 0
 
     @staticmethod
     def calculate_num_boxes_per_layer(ratios: np.ndarray):

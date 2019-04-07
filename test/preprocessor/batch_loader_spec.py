@@ -36,7 +36,7 @@ class BatchLoaderSpec:
         # label with one box
         label = batch_loader.load_label('test/resources/test_picture.txt', origin_width=300, origin_height=300)
         expected_label = np.array([
-            [0, 1, 2, 3, 4]
+            [0, 4, 5, 4, 6]
         ])
         assert label.shape == (1, 5)
         np.testing.assert_equal(label, expected_label)
@@ -44,8 +44,8 @@ class BatchLoaderSpec:
         # label with two boxes
         label = batch_loader.load_label('test/resources/test_picture2.txt', origin_width=300, origin_height=300)
         expected_label = np.array([
-            [0, 1, 2, 3, 4],
-            [1, 5, 6, 7, 8]
+            [0, 4, 5, 4, 6],
+            [1, 5, 4, 6, 4]
         ])
         assert label.shape == (2, 5)
         np.testing.assert_equal(label, expected_label)
@@ -53,9 +53,9 @@ class BatchLoaderSpec:
         # label with three boxes
         label = batch_loader.load_label('test/resources/test_picture3.txt', origin_width=300, origin_height=300)
         expected_label = np.array([
-            [0, 1, 2, 3, 4],
-            [1, 5, 6, 7, 8],
-            [0, 9, 10, 11, 12],
+            [0, 4, 5, 4, 6],
+            [1, 5, 4, 6, 4],
+            [0, 2, 2, 3, 3],
         ])
         assert label.shape == (3, 5)
         np.testing.assert_equal(label, expected_label)
@@ -66,7 +66,7 @@ class BatchLoaderSpec:
         # label with one box
         label = batch_loader.load_label('test/resources/test_720p_image.txt', origin_width=1024, origin_height=768)
         expected_label = np.array([
-            [0, 0, 0, 292, 195]
+            [0, 146, 97, 292, 195]
         ])
         assert label.shape == (1, 5)
         np.testing.assert_equal(label, expected_label)

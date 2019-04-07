@@ -26,7 +26,7 @@ class BatchLoader(object):
     def validate_files(self):
         """
         check if all image files have a corresponding label file or even exits
-        this requires that the images are named with a *.jpg format!
+        this requires that the images are named with a *.jpg (RGB) format! and the label with *.txt format
         """
         for image in self.files:
             if not os.path.exists(image):
@@ -88,7 +88,7 @@ class BatchLoader(object):
         :param origin_height: height of input image
         :param destination_width: width of resized image
         :param destination_height: height of resized image
-        :return: numpy array of the labels in shape=(num_boxes, 5) and dtpye=int32
+        :return: numpy array of the labels in shape=(num_boxes, 5) and dtpye=int32. the format is [class,x,y,w,h]
                  or None if the file could not be loaded
         """
         # compute the coordination scale factors
@@ -100,4 +100,13 @@ class BatchLoader(object):
         # convert bounding box to resized image
         reshaped_label[:, [1, 3]] *= width_scale
         reshaped_label[:, [2, 4]] *= height_scale
+        # convert x_min, y_min, x_max, y_max to x,y,w,h
+        x = (reshaped_label[:, 1] + reshaped_label[:, 3]) // 2  # x = (x_min + x_max) / 2
+        y = (reshaped_label[:, 2] + reshaped_label[:, 4]) // 2  # y = (y_min + y_max) / 2
+        w = (reshaped_label[:, 3] - reshaped_label[:, 1])  # y = (x_max - x_min)
+        h = (reshaped_label[:, 4] - reshaped_label[:, 2])  # y = (y_max - y_min)
+        reshaped_label[:, 1] = x
+        reshaped_label[:, 2] = y
+        reshaped_label[:, 3] = w
+        reshaped_label[:, 4] = h
         return reshaped_label.astype(np.int32)
