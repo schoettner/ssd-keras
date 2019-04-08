@@ -33,6 +33,11 @@ class LabelEncoderSpec:
         # only check that all scales are returned, not the shape of the scales
         assert len(y_true) == 6
 
+    def test_default_box_transform(self):
+        label_encoder = self.given_default_encoder()
+        boxes = label_encoder.transform_anchor_boxes()
+        print(boxes)
+
     @staticmethod
     def given_default_encoder():
         return LabelEncoder(num_classes=3)

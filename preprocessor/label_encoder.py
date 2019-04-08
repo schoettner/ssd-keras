@@ -29,8 +29,9 @@ class LabelEncoder(object):
         self.img_height = img_height
         self.num_classes = num_classes
         self.feature_map_sizes = feature_maps
+        self.amount_of_feature_maps = len(feature_maps)
         self.ratios = ratios
-        self.num_bboxes_per_layer = self.calculate_num_boxes_per_layer(ratios)
+        self.num_bboxes_per_layer = self.calculate_num_default_boxes_per_scale(ratios)
 
     def convert_label(self, label: np.ndarray):
         """
@@ -71,18 +72,28 @@ class LabelEncoder(object):
         :return:
         """
 
+    def transform_anchor_boxes(self, s_min: float = 0.2, s_max: float = 0.9):
+        """
+        transform the anchor boxes from ratios to absolute values to calculate the jaccard overlap
+        see 'Choosing scales and aspect ratios for default boxes' in ssd paper page 5-6
 
-        return 0
 
-    def get_box_label(self):
-        return None
-
-    def set_true_boxes(self):
-        return None
-
+        :return:
+        """
+        m = self.amount_of_feature_maps
+        scales = [] #np.zeros(shape=(6, ))  # 6 scales, 6 boxes per scale, 4 values per box (x,y,w,h)
+        # k = scale index, starting at 0 , a_r = aspect ratio of scale
+        for k, a_r in enumerate(self.ratios):
+            s_k = s_min + ((s_max - s_min)/(m - 1)) * k  # not k-1 because we start at 0 not 1
+            a_r_sqrt = np.sqrt(a_r)
+            w_k = s_k * a_r_sqrt  # default box widths
+            h_k = s_k / a_r_sqrt  # default box heights
+            # scales[k] = np.ndarray([w_k, h_k])
+            scales.append(np.column_stack((w_k,h_k)))
+        return scales
 
     @staticmethod
-    def calculate_num_boxes_per_layer(ratios: np.ndarray):
+    def calculate_num_default_boxes_per_scale(ratios: np.ndarray):
         num_bboxes_per_layer = []
         for layer in ratios:
             if 1 in layer:
