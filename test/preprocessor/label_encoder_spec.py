@@ -1,7 +1,7 @@
+import numpy as np
 import pytest
 
 from preprocessor.label_encoder import LabelEncoder
-import numpy as np
 
 
 class LabelEncoderSpec:
@@ -42,33 +42,42 @@ class LabelEncoderSpec:
         s1, s2 = label_encoder.calculate_feature_map_scale(0, 6)
         assert s1 == 0.2
         assert s2 == pytest.approx(0.26, abs=0.01)
-
         #scale 2
         s1, s2 = label_encoder.calculate_feature_map_scale(1, 6)
         assert s1 == pytest.approx(0.34)
         assert s2 == pytest.approx(0.4, abs=0.01)
-
         #scale 3
         s1, s2 = label_encoder.calculate_feature_map_scale(2, 6)
         assert s1 == 0.48
         assert s2 == pytest.approx(0.55, abs=0.01)
-
         #scale 4
         s1, s2 = label_encoder.calculate_feature_map_scale(3, 6)
         assert s1 == pytest.approx(0.62)
         assert s2 == pytest.approx(0.69, abs=0.01)
-
         #scale 5
         s1, s2 = label_encoder.calculate_feature_map_scale(4, 6)
         assert s1 == 0.76
         assert s2 == pytest.approx(0.82, abs=0.01)
-
         #scale 6
         s1, s2 = label_encoder.calculate_feature_map_scale(5, 6)
         assert s1 == pytest.approx(0.9)
         assert s2 == pytest.approx(0.95, abs=0.01)
 
+    def test_calculate_boxes_for_layer(self):
+        label_encoder = self.given_default_encoder()
+        ratios = self.given_default_ratios()
+        a, b = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
+                                                       feature_map_height=1,
+                                                       aspect_ratios=ratios,
+                                                       s_k=0.9,
+                                                       s_k_alt=0.95)
+        print(a)
+        print(b)
 
     @staticmethod
     def given_default_encoder():
         return LabelEncoder(num_classes=3)
+
+    @staticmethod
+    def given_default_ratios():
+        return np.array([1, 2, 3, 1/2, 1/3], dtype=np.float32)

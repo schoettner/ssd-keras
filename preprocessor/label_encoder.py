@@ -90,6 +90,22 @@ class LabelEncoder(object):
             scales.append(np.column_stack((w_k, h_k)))
         return np.array(scales, dtype=np.float32)
 
+    def calculate_boxes_for_layer(self,
+                                  feature_map_width: int,
+                                  feature_map_height: int,
+                                  aspect_ratios: np.ndarray,
+                                  s_k: float,
+                                  s_k_alt: float):
+        cell_width = self.img_width // feature_map_width
+        cell_height = self.img_height // feature_map_height
+        ar_sqrt = np.sqrt(aspect_ratios)
+        box_width = (s_k * cell_width) * ar_sqrt
+        box_height = (s_k * cell_height) / ar_sqrt
+        if 1 in aspect_ratios:
+            box_width = np.append(box_width, s_k_alt * cell_width)  # ar for this is 1 too
+            box_height = np.append(box_height, s_k_alt * cell_height)  # ar for this is 1 too
+        return box_width, box_height
+
     def calculate_feature_map_scale(self, k: int, m: int = 6):
         """
         calculate s_k and s'_k
