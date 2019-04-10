@@ -66,13 +66,23 @@ class LabelEncoderSpec:
     def test_calculate_boxes_for_layer(self):
         label_encoder = self.given_default_encoder()
         ratios = self.given_default_ratios()
-        a, b = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
-                                                       feature_map_height=1,
-                                                       aspect_ratios=ratios,
-                                                       s_k=0.9,
-                                                       s_k_alt=0.95)
-        print(a)
-        print(b)
+
+        # biggest layer
+        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
+                                                                feature_map_height=1,
+                                                                aspect_ratios=ratios,
+                                                                s_k=0.9,
+                                                                s_k_alt=0.95)
+        expected_boxes = np.array([
+            [150, 150, 270, 270],
+            [150, 150, 381.84, 190.92],
+            [150, 150, 467.65, 155.88],
+            [150, 150, 190.92, 381.84],
+            [150, 150, 155.88, 467.65],
+            [150, 150, 285, 285],
+        ])
+
+        np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
 
     @staticmethod
     def given_default_encoder():

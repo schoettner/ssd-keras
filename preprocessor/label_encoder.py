@@ -95,16 +95,33 @@ class LabelEncoder(object):
                                   feature_map_height: int,
                                   aspect_ratios: np.ndarray,
                                   s_k: float,
-                                  s_k_alt: float):
+                                  s_k_alt: float,
+                                  offset: float = 0.5):
         cell_width = self.img_width // feature_map_width
         cell_height = self.img_height // feature_map_height
         ar_sqrt = np.sqrt(aspect_ratios)
+
+        # calculate absolute width and height of the default boxes
         box_width = (s_k * cell_width) * ar_sqrt
         box_height = (s_k * cell_height) / ar_sqrt
         if 1 in aspect_ratios:
             box_width = np.append(box_width, s_k_alt * cell_width)  # ar for this is 1 too
             box_height = np.append(box_height, s_k_alt * cell_height)  # ar for this is 1 too
-        return box_width, box_height
+        w_h = np.column_stack((box_width, box_height))
+
+        # calculate the x and y center of the feature map cells
+        center_x = np.linspace(start=offset * cell_width,
+                               stop=(offset + feature_map_width - 1) * cell_width,
+                               num=feature_map_width)
+        center_y = np.linspace(start=offset * cell_height,
+                               stop=(offset + feature_map_height - 1) * cell_height,
+                               num=feature_map_height)
+
+        # compute the cartesian product of x and y
+        grid = self.__cartesian_product__(center_x, center_y)
+
+        boxes = np.stack(np.meshgrid(grid, w_h, indexing='ij'), -1).reshape(-1, 4, order='F')
+        return boxes
 
     def calculate_feature_map_scale(self, k: int, m: int = 6):
         """
@@ -117,6 +134,18 @@ class LabelEncoder(object):
         s_k_next = 1 if (k == m - 1) else self.__calculate_scale__(k + 1, m)
         s_k_alt = np.sqrt(s_k * s_k_next)
         return s_k, s_k_alt
+
+    @staticmethod
+    def __cartesian_product__(a: np.ndarray, b: np.ndarray):
+        """
+        compute all possible combinations of two arrays, called the cartesian product
+
+        Reference: https://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        :param a: first array
+        :param b: second array
+        :return: cartesian product of the two arrays
+        """
+        return np.stack(np.meshgrid(a, b), -1).reshape(-1, 2, order='F')
 
     @staticmethod
     def __calculate_scale__(k: int,
@@ -132,7 +161,6 @@ class LabelEncoder(object):
         :return: the scale of feature map (or scale) k
         """
         return s_min + ((s_max - s_min)/(m - 1)) * k  # not k-1 because we start at 0 not 1
-
 
     @staticmethod
     def __calculate_num_default_boxes_per_scale__(ratios: np.ndarray):
