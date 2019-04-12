@@ -62,33 +62,7 @@ class LabelEncoder(object):
                        vector_size)
         return np.zeros(shape=scale_shape, dtype=np.float32)
 
-    def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
-        """
-        simple IOU (intersection of union) calculation
-        iou = (Area of overlap) / (Area of union)
-        calculate for whole scale at once? all scales at once?
-        call incoming. brb
-
-        :return:
-        """
-
-    def transform_anchor_boxes(self):
-        """
-        transform the anchor boxes from ratios to absolute values to calculate the jaccard overlap
-        see 'Choosing scales and aspect ratios for default boxes' in ssd paper page 5-6
-
-
-        :return:
-        """
-        m = self.amount_of_feature_maps
-        scales = []
-        for k, a_r in enumerate(self.ratios):
-            s_k, s_k_alt = self.calculate_feature_map_scale(k, m)
-            a_r_sqrt = np.sqrt(a_r)
-            w_k = s_k * a_r_sqrt  # default box widths
-            h_k = s_k / a_r_sqrt  # default box heights
-            scales.append(np.column_stack((w_k, h_k)))
-        return np.array(scales, dtype=np.float32)
+    # def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
 
     def calculate_boxes_for_layer(self,
                                   feature_map_width: int,
@@ -120,7 +94,12 @@ class LabelEncoder(object):
         # compute the cartesian product of x and y
         grid = self.__cartesian_product__(center_x, center_y)
 
-        boxes = np.stack(np.meshgrid(grid, w_h, indexing='ij'), -1).reshape(-1, 4, order='F')
+        # combine to x,y,w,h (centroids)
+        num_boxes_per_cell = w_h.shape[0]
+        num_cells = feature_map_width*feature_map_height
+        grid = np.repeat(grid, num_boxes_per_cell, axis=0)
+        w_h = np.tile(w_h, (num_cells, 1))
+        boxes = np.hstack((grid, w_h))
         return boxes
 
     def calculate_feature_map_scale(self, k: int, m: int = 6):

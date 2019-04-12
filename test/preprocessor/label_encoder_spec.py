@@ -67,7 +67,7 @@ class LabelEncoderSpec:
         label_encoder = self.given_default_encoder()
         ratios = self.given_default_ratios()
 
-        # biggest layer
+        # [1][1] layer
         default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
                                                                 feature_map_height=1,
                                                                 aspect_ratios=ratios,
@@ -81,7 +81,41 @@ class LabelEncoderSpec:
             [150, 150, 155.88, 467.65],
             [150, 150, 285, 285],
         ])
+        np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
 
+        # [2][2] layer
+        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=2,
+                                                                feature_map_height=2,
+                                                                aspect_ratios=ratios,
+                                                                s_k=0.76,
+                                                                s_k_alt=0.82)
+        expected_boxes = np.array([
+            [75, 75, 114, 114],
+            [75, 75, 161.22, 80.61],
+            [75, 75, 197.45, 65.82],
+            [75, 75, 80.61, 161.22],
+            [75, 75, 65.82, 197.45],
+            [75, 75, 123, 123],
+            [75, 225, 114, 114],
+            [75, 225, 161.22, 80.61],
+            [75, 225, 197.45, 65.82],
+            [75, 225, 80.61, 161.22],
+            [75, 225, 65.82, 197.45],
+            [75, 225, 123, 123],
+            [225, 75, 114, 114],
+            [225, 75, 161.22, 80.61],
+            [225, 75, 197.45, 65.82],
+            [225, 75, 80.61, 161.22],
+            [225, 75, 65.82, 197.45],
+            [225, 75, 123, 123],
+            [225, 225, 114, 114],
+            [225, 225, 161.22, 80.61],
+            [225, 225, 197.45, 65.82],
+            [225, 225, 80.61, 161.22],
+            [225, 225, 65.82, 197.45],
+            [225, 225, 123, 123],
+
+        ])
         np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
 
     @staticmethod
