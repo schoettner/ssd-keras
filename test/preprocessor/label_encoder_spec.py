@@ -38,27 +38,27 @@ class LabelEncoderSpec:
     def test_feature_map_scale(self):
         label_encoder = self.given_default_encoder()
 
-        #scale 1
+        # scale 1
         s1, s2 = label_encoder.calculate_feature_map_scale(0, 6)
         assert s1 == 0.2
         assert s2 == pytest.approx(0.26, abs=0.01)
-        #scale 2
+        # scale 2
         s1, s2 = label_encoder.calculate_feature_map_scale(1, 6)
         assert s1 == pytest.approx(0.34)
         assert s2 == pytest.approx(0.4, abs=0.01)
-        #scale 3
+        # scale 3
         s1, s2 = label_encoder.calculate_feature_map_scale(2, 6)
         assert s1 == 0.48
         assert s2 == pytest.approx(0.55, abs=0.01)
-        #scale 4
+        # scale 4
         s1, s2 = label_encoder.calculate_feature_map_scale(3, 6)
         assert s1 == pytest.approx(0.62)
         assert s2 == pytest.approx(0.69, abs=0.01)
-        #scale 5
+        # scale 5
         s1, s2 = label_encoder.calculate_feature_map_scale(4, 6)
         assert s1 == 0.76
         assert s2 == pytest.approx(0.82, abs=0.01)
-        #scale 6
+        # scale 6
         s1, s2 = label_encoder.calculate_feature_map_scale(5, 6)
         assert s1 == pytest.approx(0.9)
         assert s2 == pytest.approx(0.95, abs=0.01)
@@ -67,7 +67,7 @@ class LabelEncoderSpec:
         label_encoder = self.given_default_encoder()
         ratios = self.given_default_ratios()
 
-        # [1][1] layer
+        # biggest layer
         default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
                                                                 feature_map_height=1,
                                                                 aspect_ratios=ratios,
@@ -117,6 +117,14 @@ class LabelEncoderSpec:
 
         ])
         np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
+
+        # smallest layer
+        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=38,
+                                                                feature_map_height=38,
+                                                                aspect_ratios=ratios,
+                                                                s_k=0.2,
+                                                                s_k_alt=0.24)
+        assert default_boxes.shape == (8664, 4)  # 38*38*6
 
     @staticmethod
     def given_default_encoder():
