@@ -64,13 +64,13 @@ class LabelEncoder(object):
 
     # def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
 
-    def calculate_boxes_for_layer(self,
-                                  feature_map_width: int,
-                                  feature_map_height: int,
-                                  aspect_ratios: np.ndarray,
-                                  s_k: float,
-                                  s_k_alt: float,
-                                  offset: float = 0.5):
+    def calculate_default_boxes_for_layer(self,
+                                          feature_map_width: int,
+                                          feature_map_height: int,
+                                          aspect_ratios: np.ndarray,
+                                          s_k: float,
+                                          s_k_alt: float,
+                                          offset: float = 0.5):
         cell_width = self.img_width // feature_map_width
         cell_height = self.img_height // feature_map_height
         ar_sqrt = np.sqrt(aspect_ratios)

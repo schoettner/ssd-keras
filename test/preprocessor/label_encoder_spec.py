@@ -68,11 +68,11 @@ class LabelEncoderSpec:
         ratios = self.given_default_ratios()
 
         # biggest layer
-        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=1,
-                                                                feature_map_height=1,
-                                                                aspect_ratios=ratios,
-                                                                s_k=0.9,
-                                                                s_k_alt=0.95)
+        default_boxes = label_encoder.calculate_default_boxes_for_layer(feature_map_width=1,
+                                                                        feature_map_height=1,
+                                                                        aspect_ratios=ratios,
+                                                                        s_k=0.9,
+                                                                        s_k_alt=0.95)
         expected_boxes = np.array([
             [150, 150, 270, 270],
             [150, 150, 381.84, 190.92],
@@ -84,11 +84,11 @@ class LabelEncoderSpec:
         np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
 
         # [2][2] layer
-        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=2,
-                                                                feature_map_height=2,
-                                                                aspect_ratios=ratios,
-                                                                s_k=0.76,
-                                                                s_k_alt=0.82)
+        default_boxes = label_encoder.calculate_default_boxes_for_layer(feature_map_width=2,
+                                                                        feature_map_height=2,
+                                                                        aspect_ratios=ratios,
+                                                                        s_k=0.76,
+                                                                        s_k_alt=0.82)
         expected_boxes = np.array([
             [75, 75, 114, 114],
             [75, 75, 161.22, 80.61],
@@ -119,11 +119,11 @@ class LabelEncoderSpec:
         np.testing.assert_allclose(default_boxes, expected_boxes, atol=0.1)
 
         # smallest layer
-        default_boxes = label_encoder.calculate_boxes_for_layer(feature_map_width=38,
-                                                                feature_map_height=38,
-                                                                aspect_ratios=ratios,
-                                                                s_k=0.2,
-                                                                s_k_alt=0.24)
+        default_boxes = label_encoder.calculate_default_boxes_for_layer(feature_map_width=38,
+                                                                        feature_map_height=38,
+                                                                        aspect_ratios=ratios,
+                                                                        s_k=0.2,
+                                                                        s_k_alt=0.24)
         assert default_boxes.shape == (8664, 4)  # 38*38*6
 
     @staticmethod
