@@ -1,3 +1,4 @@
+pytest
 tensorflow==1.13.1
 pillow==6.0.0
 numpy

@@ -29,9 +29,20 @@ class LabelEncoder(object):
         self.img_height = img_height
         self.num_classes = num_classes
         self.feature_map_sizes = feature_maps
+        self.feature_map_amount = feature_maps.shape[0]
         self.amount_of_feature_maps = len(feature_maps)
         self.ratios = ratios
         self.num_bboxes_per_layer = self.__calculate_num_default_boxes_per_scale__(ratios)
+        self.default_boxes_total = np.empty(shape=self.feature_map_amount)
+        for k, feature_map in enumerate(self.feature_map_sizes):
+            s_k, s_k_alt = self.calculate_feature_map_scale(k=k, m=self.feature_map_amount)
+            default_boxes = self.calculate_default_boxes_for_layer(feature_map_width=feature_map[0],
+                                                                   feature_map_height=feature_map[1],
+                                                                   aspect_ratios=self.ratios[k],
+                                                                   s_k=s_k,
+                                                                   s_k_alt=s_k_alt)
+            np.append(self.default_boxes_total, default_boxes)
+        # print(self.default_boxes_total)
 
     def convert_label(self, label: np.ndarray):
         """
@@ -104,7 +115,10 @@ class LabelEncoder(object):
 
     def calculate_feature_map_scale(self, k: int, m: int = 6):
         """
-        calculate s_k and s'_k
+        calculate scale for the feature map k.
+        s_k is the base scale for the feature map.
+        s'_k is the additional scale, if the layer contains the aspect ratio 1
+
         :param k: number of scale [0,m-1]. origin in paper is [1,m] but was simplified here
         :param m: number of feature maps for prediction. default are 6 scales
         :return: s_k, s'_k
