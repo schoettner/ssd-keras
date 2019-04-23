@@ -47,6 +47,7 @@ class LabelEncoder(object):
                                                        aspect_ratios=self.ratios[k],
                                                        s_k=s_k,
                                                        s_k_alt=s_k_alt))
+        self.default_box_vector = np.concatenate(self.default_boxes, axis=0)
 
     def convert_label(self, ground_truth_labels: list):
         """
@@ -66,12 +67,14 @@ class LabelEncoder(object):
 
         for box in ground_truth_labels:
             iou = self.calculate_iou(box[1:])
-            matches = np.where(iou > self.iou_threshold)
+            matches = np.argwhere(iou > self.iou_threshold)
             for match in matches:
                 scale, x_cell, y_cell, box_nr = self.__convert_index__(match)
-                geo_diff = self.__calculate_geometry_difference(box, self.default_boxes[match])
-                y_true[scale][x_cell][y_cell][box_nr][0:5] = geo_diff
-                y_true[scale][x_cell][y_cell][box_nr][5:] = self.class_predictions[box[0]]
+                match_id = int(match)
+                geo_diff = self.__calculate_geometry_difference(box[1:],
+                                                                self.default_box_vector[match_id])
+                y_true[scale][x_cell][y_cell][box_nr][0:4] = geo_diff
+                y_true[scale][x_cell][y_cell][box_nr][4:] = self.class_predictions[box[0]]
 
         return y_true
 
@@ -95,15 +98,15 @@ class LabelEncoder(object):
 
     def calculate_iou(self, true_box: np.ndarray):
         """
-        todo: vectorize this. concat in cotr
+        todo: vectorize this.
         compute the intersection of union (jaccard overlap) of the ground truth boxe
         with the default boxes (or anchor boxes)
         :param true_box: array[int] - [x,y,w,h] as centroids
         :return:
         """
-        default_box_vector = np.concatenate(self.default_boxes, axis=0)
-        iou = np.zeros(len(default_box_vector))
-        for idx, default_box in enumerate(default_box_vector):
+
+        iou = np.zeros(len(self.default_box_vector))
+        for idx, default_box in enumerate(self.default_box_vector):
             iou[idx] = self.calculate_box_iou(true_box, default_box)
         return iou
 
@@ -237,10 +240,16 @@ class LabelEncoder(object):
 
     @staticmethod
     def __convert_index__(index: int):
-        scale, x_cell, y_cell, box_nr = 0
+        scale = 1
+        x_cell = 0
+        y_cell = 0
+        box_nr = 0
         return scale, x_cell, y_cell, box_nr
 
     @staticmethod
     def __calculate_geometry_difference(a: np.ndarray, b: np.ndarray):
-        x_diff, y_diff, w_diff, h_diff = 0
+        x_diff = 0
+        y_diff = 0
+        w_diff = 0
+        h_diff = 0
         return np.array([x_diff, y_diff, w_diff, h_diff])

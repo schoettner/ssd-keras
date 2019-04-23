@@ -39,6 +39,7 @@ class LabelEncoderSpec:
         label_encoder = self.given_simple_encoder()
 
         # perfect match on 2x2 scale, first cell, first box
+        # the other two boxes in this cell should trigger too
         box = [np.array([0, 25, 25, 25, 25])]
 
         y_true = label_encoder.convert_label(box)
