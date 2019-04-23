@@ -12,12 +12,6 @@ class LabelEncoderSpec:
     #     # only check that all scales are returned, not the shape of the scales
     #     assert len(y_true) == 6
 
-    def test_iou_shape(self):
-        label_encoder = self.given_default_encoder()
-
-        iou = label_encoder.calculate_iou(None)
-        assert iou.shape == (11640, 4)
-
     def test_iou_box_calculation(self):
         label_encoder = self.given_default_encoder()
 
@@ -33,6 +27,13 @@ class LabelEncoderSpec:
         iou = label_encoder.calculate_box_iou(np.array([75, 75, 50, 50]), np.array([75, 100, 50, 50]))
         assert iou == 1/3
 
+    def test_iou_vector_calculation(self):
+        label_encoder = self.given_default_encoder()
+        # iou = label_encoder.calculate_iou(np.array([150, 150, 80, 80]))
+        iou = label_encoder.calculate_iou(np.array([150, 150, 300, 300]))
+        assert len(iou) == 11640  # 8664+2166+600+150+54+6 possible boxes
+        assert np.min(iou) >= 0  # if the box has w,h=300 0 is not possible
+        assert np.max(iou) <= 1
 
     @staticmethod
     def given_default_encoder():

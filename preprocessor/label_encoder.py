@@ -78,24 +78,22 @@ class LabelEncoder(object):
                        vector_size)
         return np.zeros(shape=scale_shape, dtype=np.float32)
 
-    def calculate_iou(self, true_boxes: np.ndarray):
+    def calculate_iou(self, true_box: np.ndarray):
         """
-        compute the intersection of union (jaccard overlap) of the ground truth boxes
+        todo: vectorize this
+        compute the intersection of union (jaccard overlap) of the ground truth boxe
         with the default boxes (or anchor boxes)
-        :param true_boxes:
+        :param true_box: array[int] - [x,y,w,h] as centroids
         :return:
         """
         # calculate the ground truth box details
 
-        # calculate anchor details
-        # problem: the anchors are stored in a list. all anchors must be combined
-        # based on the the single index, the absolute coordinate needs to be found
         default_box_vector = np.concatenate(self.default_boxes, axis=0)
-
-
+        iou = np.zeros(len(default_box_vector))
+        for idx, default_box in enumerate(default_box_vector):
+            iou[idx] = self.calculate_box_iou(true_box, default_box)
         # calculate iou
-        return default_box_vector
-
+        return iou
 
     def calculate_default_boxes_for_scale(self,
                                           feature_map_width: int,
@@ -160,13 +158,11 @@ class LabelEncoder(object):
         return s_k, s_k_alt
 
     @staticmethod
-    def calculate_box_iou(a: np.ndarray, b: np.ndarray, max_x: int = 300, max_y: int = 300):
+    def calculate_box_iou(a: np.ndarray, b: np.ndarray):
         """
         calculate the iou of two boxes
         :param a: [x,y,w,h] as centroid
         :param b: [x,y,w,h] as centroid
-        :param max_x: int - max pixel possible on x (=img width)
-        :param max_y: int - max pixel possible on y (=img height)
         :return: float of the iou
         """
         x = 0
@@ -187,7 +183,7 @@ class LabelEncoder(object):
 
         # calculate iou
         iou = intersection_area / (a_area + b_area - intersection_area)
-        return iou
+        return iou  # avoid rounding issues
 
     @staticmethod
     def __cartesian_product__(a: np.ndarray, b: np.ndarray):
