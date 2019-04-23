@@ -34,7 +34,6 @@ class LabelEncoderInitSpec:
         scale6 = label_encoder.create_scale(5)
         assert scale6.shape == (1, 1, 6, 7)
 
-
     def test_feature_map_scale_calculation(self):
         label_encoder = self.given_default_encoder()
 

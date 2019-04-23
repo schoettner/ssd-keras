@@ -24,12 +24,14 @@ class LabelEncoder(object):
                                                 [1.0, 2.0, 3.0, 0.5, 1.0 / 3.0],
                                                 [1.0, 2.0, 3.0, 0.5, 1.0 / 3.0],
                                                 [1.0, 2.0, 3.0, 0.5, 1.0 / 3.0],
-                                                ])):
+                                                ]),
+                 iou_threshold: float = 0.5):
         self.img_width = img_width
         self.img_height = img_height
         self.num_classes = num_classes
         self.feature_map_sizes = feature_map_sizes
         self.ratios = ratios
+        self.iou_threshold = iou_threshold
 
         # basic calculations which are required for all label conversions
         self.amount_of_feature_maps = len(feature_map_sizes)
@@ -46,17 +48,30 @@ class LabelEncoder(object):
                                                        s_k=s_k,
                                                        s_k_alt=s_k_alt))
 
-    def convert_label(self, ground_truth_labels: np.ndarray):
+    def convert_label(self, ground_truth_labels: list):
         """
         main method to compute the label
-        :param ground_truth_labels: array with batch_size rows of ground truth boxes
-         the format is [class_id, x_center ,y_center, w, h]
-        :return:
+        :param ground_truth_labels: list of ground truth boxes.
+        the format is [class_id, x_center ,y_center, w, h]
+        :return: y_true for a single label (not a batch)
+        format [scale][x_cell][y_cell][box_nr][x_diff, y_diff, w_diff, h_diff, class_1, ..., class_n]
         """
-        batch_size = len(ground_truth_labels)
+
         y_true = []
-        for feature_map_number, _ in enumerate(self.feature_map_sizes):
+        for feature_map_number in range(self.amount_of_feature_maps):
             y_true.append(self.create_scale(feature_map_number))
+
+        if not ground_truth_labels:
+            return y_true  # return empty labels
+
+        for box in ground_truth_labels:
+            iou = self.calculate_iou(box[1:])
+            matches = np.where(iou > self.iou_threshold)
+            for match in matches:
+                scale, x_cell, y_cell, box_nr = self.__convert_index__(match)
+                geo_diff = self.__calculate_geometry_difference(box, self.default_boxes[match])
+                y_true[scale][x_cell][y_cell][box_nr][0:5] = geo_diff
+                y_true[scale][x_cell][y_cell][box_nr][5:] = self.class_predictions[box[0]]
 
         return y_true
 
@@ -80,19 +95,16 @@ class LabelEncoder(object):
 
     def calculate_iou(self, true_box: np.ndarray):
         """
-        todo: vectorize this
+        todo: vectorize this. concat in cotr
         compute the intersection of union (jaccard overlap) of the ground truth boxe
         with the default boxes (or anchor boxes)
         :param true_box: array[int] - [x,y,w,h] as centroids
         :return:
         """
-        # calculate the ground truth box details
-
         default_box_vector = np.concatenate(self.default_boxes, axis=0)
         iou = np.zeros(len(default_box_vector))
         for idx, default_box in enumerate(default_box_vector):
             iou[idx] = self.calculate_box_iou(true_box, default_box)
-        # calculate iou
         return iou
 
     def calculate_default_boxes_for_scale(self,
@@ -222,3 +234,13 @@ class LabelEncoder(object):
             else:
                 num_bboxes_per_layer.append(len(layer))
         return num_bboxes_per_layer
+
+    @staticmethod
+    def __convert_index__(index: int):
+        scale, x_cell, y_cell, box_nr = 0
+        return scale, x_cell, y_cell, box_nr
+
+    @staticmethod
+    def __calculate_geometry_difference(a: np.ndarray, b: np.ndarray):
+        x_diff, y_diff, w_diff, h_diff = 0
+        return np.array([x_diff, y_diff, w_diff, h_diff])
