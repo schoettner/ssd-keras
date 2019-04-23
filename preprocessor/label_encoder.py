@@ -46,15 +46,18 @@ class LabelEncoder(object):
                                                        s_k=s_k,
                                                        s_k_alt=s_k_alt))
 
-    def convert_label(self, label: np.ndarray):
+    def convert_label(self, ground_truth_labels: np.ndarray):
         """
         main method to compute the label
-        :param label:
+        :param ground_truth_labels: array with batch_size rows of ground truth boxes
+         the format is [class_id, x_center ,y_center, w, h]
         :return:
         """
+        batch_size = len(ground_truth_labels)
         y_true = []
         for feature_map_number, _ in enumerate(self.feature_map_sizes):
             y_true.append(self.create_scale(feature_map_number))
+
         return y_true
 
     def create_scale(self, feature_map_number: int, include_classes: bool = True):
@@ -75,7 +78,24 @@ class LabelEncoder(object):
                        vector_size)
         return np.zeros(shape=scale_shape, dtype=np.float32)
 
-    # def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
+    def calculate_iou(self, true_boxes: np.ndarray):
+        """
+        compute the intersection of union (jaccard overlap) of the ground truth boxes
+        with the default boxes (or anchor boxes)
+        :param true_boxes:
+        :return:
+        """
+        # calculate the ground truth box details
+
+        # calculate anchor details
+        # problem: the anchors are stored in a list. all anchors must be combined
+        # based on the the single index, the absolute coordinate needs to be found
+        default_box_vector = np.concatenate(self.default_boxes, axis=0)
+
+
+        # calculate iou
+        return default_box_vector
+
 
     def calculate_default_boxes_for_scale(self,
                                           feature_map_width: int,
@@ -129,7 +149,7 @@ class LabelEncoder(object):
 
     def calculate_feature_map_scale(self, k: int, m: int = 6):
         """
-        calculate s_k and s'_k
+        calculate s_k and s'_k for the given feature map index
         :param k: number of scale [0,m-1]. origin in paper is [1,m] but was simplified here
         :param m: number of feature maps for prediction. default are 6 scales
         :return: s_k, s'_k
@@ -138,6 +158,36 @@ class LabelEncoder(object):
         s_k_next = 1 if (k == m - 1) else self.__calculate_scale__(k + 1, m)
         s_k_alt = np.sqrt(s_k * s_k_next)
         return s_k, s_k_alt
+
+    @staticmethod
+    def calculate_box_iou(a: np.ndarray, b: np.ndarray, max_x: int = 300, max_y: int = 300):
+        """
+        calculate the iou of two boxes
+        :param a: [x,y,w,h] as centroid
+        :param b: [x,y,w,h] as centroid
+        :param max_x: int - max pixel possible on x (=img width)
+        :param max_y: int - max pixel possible on y (=img height)
+        :return: float of the iou
+        """
+        x = 0
+        y = 1
+        w = 2
+        h = 3
+
+        # calculate intersection
+        x1 = np.max([a[x] - 0.5 * a[w], b[x] - 0.5 * b[w]])
+        x2 = np.min([a[x] + 0.5 * a[w], b[x] + 0.5 * b[w]])
+        y1 = np.max([a[y] - 0.5 * a[h], b[y] - 0.5 * b[h]])
+        y2 = np.min([a[y] + 0.5 * a[h], b[y] + 0.5 * b[h]])
+        intersection_area = max((x2 - x1), 0) * max((y2 - y1), 0)
+
+        # calculate box area
+        a_area = a[w] * a[h]
+        b_area = b[w] * b[h]
+
+        # calculate iou
+        iou = intersection_area / (a_area + b_area - intersection_area)
+        return iou
 
     @staticmethod
     def __cartesian_product__(a: np.ndarray, b: np.ndarray):
