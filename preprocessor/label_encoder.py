@@ -11,12 +11,12 @@ class LabelEncoder(object):
                  img_width: int = 300,
                  img_height: int = 300,
                  # the default feature map sizes are taken for SSD300
-                 feature_maps: np.ndarray = np.array([[38, 38],
-                                                      [19, 19],
-                                                      [10, 10],
-                                                      [5, 5],
-                                                      [3, 3],
-                                                      [1, 1]]),
+                 feature_map_sizes: np.ndarray = np.array([[38, 38],
+                                                           [19, 19],
+                                                           [10, 10],
+                                                           [5, 5],
+                                                           [3, 3],
+                                                           [1, 1]]),
                  # default ratios are {1,2,3,1/2,1/3} on 6 layers in original ssd paper
                  ratios: np.ndarray = np.array([[1.0, 2.0, 3.0, 0.5, 1.0 / 3.0],
                                                 [1.0, 2.0, 3.0, 0.5, 1.0 / 3.0],
@@ -28,10 +28,23 @@ class LabelEncoder(object):
         self.img_width = img_width
         self.img_height = img_height
         self.num_classes = num_classes
-        self.feature_map_sizes = feature_maps
-        self.amount_of_feature_maps = len(feature_maps)
+        self.feature_map_sizes = feature_map_sizes
         self.ratios = ratios
+
+        # basic calculations which are required for all label conversions
+        self.amount_of_feature_maps = len(feature_map_sizes)
         self.num_bboxes_per_layer = self.__calculate_num_default_boxes_per_scale__(ratios)
+        self.class_predictions = np.identity(self.num_classes)
+
+        self.default_boxes = []
+        for k, feature_map in enumerate(feature_map_sizes):
+            s_k, s_k_alt = self.calculate_feature_map_scale(k, self.amount_of_feature_maps)
+            self.default_boxes.append(
+                self.calculate_default_boxes_for_scale(feature_map_width=feature_map[0],
+                                                       feature_map_height=feature_map[1],
+                                                       aspect_ratios=self.ratios[k],
+                                                       s_k=s_k,
+                                                       s_k_alt=s_k_alt))
 
     def convert_label(self, label: np.ndarray):
         """
@@ -64,13 +77,25 @@ class LabelEncoder(object):
 
     # def calculate_jaccard_overlap(self, true_boxes: np.ndarray):
 
-    def calculate_boxes_for_layer(self,
-                                  feature_map_width: int,
-                                  feature_map_height: int,
-                                  aspect_ratios: np.ndarray,
-                                  s_k: float,
-                                  s_k_alt: float,
-                                  offset: float = 0.5):
+    def calculate_default_boxes_for_scale(self,
+                                          feature_map_width: int,
+                                          feature_map_height: int,
+                                          aspect_ratios: np.ndarray,
+                                          s_k: float,
+                                          s_k_alt: float,
+                                          offset: float = 0.5):
+        """
+        calculate the absolute coordinates of the default boxes (known as anchor box in yolo)
+        this helps to compute the the jaccard overlap (iou) of a ground truth box with matching default boxes
+
+        :param feature_map_width: int - amount of cells in x
+        :param feature_map_height: int - amount of cells in y
+        :param aspect_ratios: list[float] - ratios of this scale
+        :param s_k: float(0...1) - scale factor for this feature map. layers with many cells have a smaller scale
+        :param s_k_alt: float(0...1) - s'_k is an alternative scale factor if the layer also contains the aspect ratio 1
+        :param offset: float(0...1) - offset of the bounding box center. 0.5 is the default and results in centroids
+        :return:
+        """
         cell_width = self.img_width // feature_map_width
         cell_height = self.img_height // feature_map_height
         ar_sqrt = np.sqrt(aspect_ratios)
