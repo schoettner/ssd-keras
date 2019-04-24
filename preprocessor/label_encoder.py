@@ -71,10 +71,10 @@ class LabelEncoder(object):
             for match in matches:
                 scale, x_cell, y_cell, box_nr = self.__convert_index__(match)
                 match_id = int(match)
-                geo_diff = self.__calculate_geometry_difference(box[1:],
-                                                                self.default_box_vector[match_id])
+                geo_diff = self.__calculate_geometry_difference__(box[1:],
+                                                                  self.default_box_vector[match_id])
                 y_true[scale][x_cell][y_cell][box_nr][0:4] = geo_diff
-                y_true[scale][x_cell][y_cell][box_nr][4:] = self.class_predictions[box[0]]
+                y_true[scale][x_cell][y_cell][box_nr][4:] = self.class_predictions[int(box[0])]
 
         return y_true
 
@@ -247,9 +247,6 @@ class LabelEncoder(object):
         return scale, x_cell, y_cell, box_nr
 
     @staticmethod
-    def __calculate_geometry_difference(a: np.ndarray, b: np.ndarray):
-        x_diff = 0
-        y_diff = 0
-        w_diff = 0
-        h_diff = 0
-        return np.array([x_diff, y_diff, w_diff, h_diff])
+    def __calculate_geometry_difference__(ground_truth_box: np.ndarray, default_box: np.ndarray):
+        geo_diff = np.floor(np.subtract(default_box, ground_truth_box), dtype=np.float32)
+        return geo_diff
