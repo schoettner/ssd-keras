@@ -250,7 +250,7 @@ class LabelEncoder(object):
             feature_map_box_count = feature_map[0] * feature_map[1] * bboxes_per_map[k]
             index_pointer += feature_map_box_count
             if index < index_pointer:  # 0 index so dont use <=
-                scale_index = 0 if k == 0 else index - predecessor_size
+                scale_index = index - predecessor_size
                 scale = k
                 break
             predecessor_size = feature_map_box_count

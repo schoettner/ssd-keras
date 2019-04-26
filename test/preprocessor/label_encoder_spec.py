@@ -44,8 +44,13 @@ class LabelEncoderSpec:
 
         y_true = label_encoder.convert_label(box)
 
-        expected_match = np.array([0, 0, 0, 0, 1, 0, 0])  # no geo diff, class 0 match
-        np.testing.assert_equal(y_true[1][0][0][0], expected_match)
+        expected_match_box1 = np.array([0, 0, 0, 0, 1, 0, 0])  # first box in the cell has no geometry offset
+        expected_match_box2 = np.array([0, 0, -9, 11, 1, 0, 0])  # second box in the cell has no geometry offset
+        expected_match_box3 = np.array([0, 0, 7, 7, 1, 0, 0])  # third box in the cell has no geometry offset
+        np.testing.assert_equal(y_true[1][0][0][0], expected_match_box1)
+        np.testing.assert_equal(y_true[1][0][0][1], expected_match_box2)
+        np.testing.assert_equal(y_true[1][0][0][2], expected_match_box3)
+
 
     @staticmethod
     def given_default_encoder():
