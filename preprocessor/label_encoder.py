@@ -69,8 +69,8 @@ class LabelEncoder(object):
             iou = self.calculate_iou(box[1:])
             matches = np.argwhere(iou > self.iou_threshold)
             for match in matches:
-                scale, x_cell, y_cell, box_nr = self.__convert_index__(match)
-                match_id = int(match)
+                match_id = int(match)  # not sure why but match sometimes is a float what can not be used as index
+                scale, x_cell, y_cell, box_nr = self.__convert_index__(match_id, self.feature_map_sizes, self.num_bboxes_per_layer)
                 geo_diff = self.__calculate_geometry_difference__(box[1:],
                                                                   self.default_box_vector[match_id])
                 y_true[scale][x_cell][y_cell][box_nr][0:4] = geo_diff
@@ -239,11 +239,30 @@ class LabelEncoder(object):
         return num_bboxes_per_layer
 
     @staticmethod
-    def __convert_index__(index: int):
-        scale = 1
-        x_cell = 0
-        y_cell = 0
-        box_nr = 0
+    def __convert_index__(index: int, feature_map_sizes: np.ndarray, bboxes_per_map: np.ndarray):
+
+        # find right feature map (or scale)
+        scale = -1
+        scale_index = - 1
+        index_pointer = 0
+        predecessor_size = 0
+        for k, feature_map in enumerate(feature_map_sizes):
+            feature_map_box_count = feature_map[0] * feature_map[1] * bboxes_per_map[k]
+            index_pointer += feature_map_box_count
+            if index < index_pointer:  # 0 index so dont use <=
+                scale_index = 0 if k == 0 else index - predecessor_size
+                scale = k
+                break
+            predecessor_size = feature_map_box_count
+
+        # find the correct cell
+        cell_index = scale_index // bboxes_per_map[scale]
+        x_cell = cell_index // feature_map_sizes[scale][0]
+        y_cell = cell_index % feature_map_sizes[scale][1]
+
+        # find cell number
+        box_nr = scale_index % bboxes_per_map[scale]
+
         return scale, x_cell, y_cell, box_nr
 
     @staticmethod
