@@ -35,7 +35,7 @@ class LabelEncoderSpec:
         assert np.min(iou) >= 0  # if the box has w,h=300 0 is not possible
         assert np.max(iou) <= 1
 
-    def test_simple_label_encode(self):
+    def test_simple_label_encode_single_cell(self):
         label_encoder = self.given_simple_encoder()
 
         # perfect match on 2x2 scale, first cell, first box
@@ -51,6 +51,24 @@ class LabelEncoderSpec:
         np.testing.assert_equal(y_true[1][0][0][1], expected_match_box2)
         np.testing.assert_equal(y_true[1][0][0][2], expected_match_box3)
 
+    def test_simple_label_encode_multi_cell(self):
+        label_encoder = self.given_simple_encoder()
+
+        # trigger three different cells in [3][3] scale
+        box = [np.array([0, 15, 15, 7, 7]),
+               np.array([1, 49, 51, 5, 10]),
+               np.array([2, 81, 82, 12, 11]),
+               ]
+
+        y_true = label_encoder.convert_label(box)
+
+        expected_match_box1 = np.array([1, 1, -1, -1, 1, 0, 0])  # first box in the cell has no geometry offset
+        expected_match_box2 = np.array([0, -2, -1, -1, 0, 1, 0])  # second box in the cell has no geometry offset
+        expected_match_box3 = np.array([1, 0, -2, -1, 0, 0, 1])  # third box in the cell has no geometry offset
+        # all match in the smallest (first) scale
+        np.testing.assert_equal(y_true[0][0][0][0], expected_match_box1)  # first cell, first box
+        np.testing.assert_equal(y_true[0][1][1][1], expected_match_box2)  # middle cell, second box
+        np.testing.assert_equal(y_true[0][2][2][2], expected_match_box3)  # last cell, third box
 
     @staticmethod
     def given_default_encoder():
