@@ -1,5 +1,8 @@
 import numpy as np
 
+from preprocessor.batch_loader import BatchLoader
+from preprocessor.label_encoder import LabelEncoder
+
 
 class PreProcessor(object):
     """
@@ -7,6 +10,17 @@ class PreProcessor(object):
     """
     def __init__(self, config: dict):
         self.config = config
+        batch_size = self.config['batch_size']
+        num_classes = self.config['num_classes']
+        img_width = self.config['img_width']
+        img_height = self.config['img_height']
+
+        file_list = []
+        self.batch_loader = BatchLoader(file_list, batch_size=batch_size)
+        self.label_encoder = LabelEncoder(num_classes, img_width, img_height)
+
+    def get_training_generator(self):
+        batch = self.batch_loader.load_next_batch()
 
     def get_random_training_generator(self):
         batch_size = self.config['batch_size']
