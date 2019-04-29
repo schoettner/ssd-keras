@@ -10,17 +10,27 @@ class PreProcessor(object):
     """
     def __init__(self, config: dict):
         self.config = config
-        batch_size = self.config['batch_size']
-        num_classes = self.config['num_classes']
-        img_width = self.config['img_width']
-        img_height = self.config['img_height']
+        self.batch_size = self.config['batch_size']
+        self.num_classes = self.config['num_classes']
+        self.img_width = self.config['img_width']
+        self.img_height = self.config['img_height']
 
         file_list = []
-        self.batch_loader = BatchLoader(file_list, batch_size=batch_size)
-        self.label_encoder = LabelEncoder(num_classes, img_width, img_height)
+        self.batch_loader = BatchLoader(file_list, batch_size=self.batch_size)
+        self.label_encoder = LabelEncoder(self.num_classes, self.img_width, self.img_height)
 
     def get_training_generator(self):
-        batch = self.batch_loader.load_next_batch()
+        img_shape = (self.img_width, self.img_height, 3)
+
+        while 1:
+            # create new batch
+            batch = self.batch_loader.load_next_batch()
+            x_batch = np.empty(shape=(self.batch_size, *img_shape))
+            y_true = []
+            for batch_index, batch_content in enumerate(batch):
+                x_batch[batch_index] = batch_content[0]  # set image data in x
+                y_true.append(self.label_encoder.convert_label(batch_content[0]))  # set ground truth in y
+            yield x_batch, y_true
 
     def get_random_training_generator(self):
         batch_size = self.config['batch_size']
