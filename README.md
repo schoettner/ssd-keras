@@ -34,4 +34,5 @@ the performance gap to OpenCV is not that big anymore.
 [SSD with tensorflow blog](https://lambdalabs.com/blog/how-to-implement-ssd-object-detection-in-tensorflow/)  
 [Netscope to visualize caffe model](https://dgschwend.github.io/netscope/#/editor)  
 [PIL vs OpenCV](https://www.kaggle.com/vfdev5/pil-vs-opencv)
-[Pillow Performance](https://python-pillow.org/pillow-perf/)
+[Pillow Performance](https://python-pillow.org/pillow-perf/)   
+[Tensorflow dataset](https://cs230-stanford.github.io/tensorflow-input-data.html)
