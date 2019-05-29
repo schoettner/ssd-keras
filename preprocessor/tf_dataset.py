@@ -1,22 +1,32 @@
 import tensorflow as tf
+from tensorflow.python.data import Iterator
 
 from preprocessor.label_encoder import LabelEncoder
 
+""" this is heavily inspired by
+https://cs230-stanford.github.io/tensorflow-input-data.html
+"""
 
 def _load_label(image_filename: str, label_filename: str):
     """Load the label from the filename(for both training and validation).
 
     The following operations are applied:
         - Load the label from the file
-        - Convert to the label from class_1, x_min_1, y_min_1, x_max_1, y_max_1, class_2, ...
-          to class_1, x_center_1, y_center_1, w_1, h_1, class_2
+        - Split the label with , delimiter
+        - reshape in 1 box = 1 row
     """
-    label = None
-    return image_filename, label
+    label_string = tf.read_file(label_filename)
+    label_split = tf.string_split([label_string], delimiter=',').values  # use .values to get tensor from sparse tensor
+    label_int = tf.strings.to_number(label_split, out_type=tf.dtypes.int32)
+    label_reshaped = tf.reshape(label_int, shape=[-1, 5])
+    return image_filename, label_reshaped
 
 
 def _encode_label(image, label, encoder: LabelEncoder):
-    encoded_label = encoder.convert_label(label)
+    """Encode
+
+    """
+    encoded_label = label
     return image, encoded_label
 
 
@@ -55,57 +65,70 @@ def _augment_image(image, label, use_random_flip):
     return image, label
 
 
-def input_fn(is_training, filenames, labels, params):
-    """Input function for the SIGNS dataset.
-
-    The filenames have format "{label}_IMG_{id}.jpg".
-    For instance: "data_dir/2_IMG_4584.jpg".
+def input_fn(is_training: bool, filenames: [], labels: [], params) -> Iterator:
+    """Input function for the SSD dataset.
 
     Args:
         is_training: (bool) whether to use the train or test pipeline.
                      At training, we shuffle the data and have multiple epochs
-        filenames: (list) filenames of the images, as ["data_dir/{label}_IMG_{id}.jpg"...]
-        labels: (list) corresponding list of labels
-        params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
+        filenames: (list) filenames of the images, as ["data/{label}_{id}.jpg"...]
+        labels: (list) filenames of the labels, as ["data/{label}_{id}.txt"...]
+        params: (Params) contains hyper-parameters of the model (ex: `params.num_epochs`)
+
+    Hyper-parameter:
+        num_classes: (int) asdf
+        batch_size: (int) asdf
+        image_width: (int) asdf
+        image_height: (int)asdf
+        num_parallel_calls: (int) asdf
+        feature_map_sizes: (array) asdf
+        ratios: (array) asdf
+        iou: (float) asdf
+        use_random_flip: (bool) asdfg
     """
+
     num_samples = len(filenames)
     assert len(filenames) == len(labels), "Filenames and labels should have same length"
 
-    encoder = LabelEncoder(num_classes=params.num_classes,
-                           img_width=params.image_width,
-                           img_height=params.image_height,
-                           feature_map_sizes=params.feature_map_sizes,
-                           ratios=params.ratios,
-                           iou_threshold=params.iou)
+    # encoder = LabelEncoder(num_classes=params.num_classes,
+    #                        img_width=params.image_width,
+    #                        img_height=params.image_height,
+    #                        feature_map_sizes=params.feature_map_sizes,
+    #                        ratios=params.ratios,
+    #                        iou_threshold=params.iou)
+    encoder = None
 
     # Create a Dataset serving batches of images and labels
-    # We don't repeat for multiple epochs because we always train and evaluate for one epoch
     load_label = lambda f, l: _load_label(f, l)
     encode_label = lambda f, l: _encode_label(f, l, encoder)
     load_img = lambda f, l: _load_image(f, l, params.image_width, params.image_height)
     augment_img = lambda f, l: _augment_image(f, l, params.use_random_flip)
 
-    if is_training:
-        dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-                   .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
-                   .map(load_label, num_parallel_calls=params.num_parallel_calls)
-                   .map(encode_label, num_parallel_calls=params.num_parallel_calls)
-                   .map(load_img, num_parallel_calls=params.num_parallel_calls)
-                   .map(augment_img, num_parallel_calls=params.num_parallel_calls)
-                   .batch(params.batch_size)
-                   .prefetch(3)  # make sure you always have three batches ready to serve
-                   )
-    else:
-        dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-                   .map(load_img)
-                   .batch(params.batch_size)
-                   .prefetch(1)  # make sure you always have one batch ready to serve
-                   )
+    with tf.device('/cpu:0'):
+        if is_training:
+            dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
+                       .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
+                       .repeat(params.num_epochs)  #
+                       .map(load_label, num_parallel_calls=params.num_parallel_calls)
+                       .map(encode_label, num_parallel_calls=params.num_parallel_calls)
+                       .map(load_img, num_parallel_calls=params.num_parallel_calls)
+                       .map(augment_img, num_parallel_calls=params.num_parallel_calls)
+                       .batch(params.batch_size)
+                       .prefetch(3)  # make sure you always have three batches ready to serve
+                       )
+        else:
+            dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
+                       .map(load_img)
+                       .batch(params.batch_size)
+                       .prefetch(1)  # make sure you always have one batch ready to serve
+                       )
 
-    # Create reinitializable iterator from dataset
-    iterator = dataset.make_initializable_iterator()
-    images, labels = iterator.get_next()
-    iterator_init_op = iterator.initializer
-
-    inputs = {'images': images, 'labels': labels, 'iterator_init_op': iterator_init_op}
-    return inputs
+        # Create re-initializable iterator from dataset
+        # iterator = dataset.make_initializable_iterator()
+        # iterator_init_op = iterator.initializer
+        # images, labels = iterator.get_next()
+        #
+        # inputs = {'images': images, 'labels': labels, 'iterator_init_op': iterator_init_op}
+        # return inputs
+        iterator = dataset.make_initializable_iterator()
+        return iterator
