@@ -21,6 +21,7 @@ the performance gap to OpenCV is not that big anymore.
 - [x] Implement SSD300
 - [x] Implement first version of loss function
 - [x] Implement random data generator
+- [ ] add scale of label depending on the image (see tf_dataset vs batch_loader)
 - [ ] Implement pre-processor
 - [ ] Implement post-processor
 - [ ] Implement prediction
