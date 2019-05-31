@@ -1,0 +1,22 @@
+{
+  "num_classes": 2,
+  "img_width": 300,
+  "img_height": 300,
+
+  "batch_size": 1,
+  "epochs": 2,
+  "steps_per_epoch": 10,
+  "validation_steps": 32,
+  "learning_rate": 0.001,
+
+  "use_eval": false,
+  "train_data_path":"./data/train",
+  "eval_data_path":"./data/eval",
+  "log_dir":"output/log/",
+  "checkpoint_dir":"output/checkpoints/",
+  "checkpoint_file":"checkpoint.hdf5",
+  "weights_file":"output/ssd-weights.h5",
+  "model_file":"output/ssd-model.hdf5"
+}
+
+

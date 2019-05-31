@@ -1,9 +1,8 @@
-# model values
+
 num_classes: 2
 img_width: 300
 img_height: 300
 
-# training values
 batch_size: 1
 epochs: 2
 steps_per_epoch: 10
@@ -14,7 +13,6 @@ train_data_path: './data/train'
 eval_data_path: './data/eval'
 #pretrained_weights: 'ssd-pretrained-weights.h5'
 
-# storage parameter
 log_dir: 'output/log/'
 checkpoint_dir: 'output/checkpoints/'
 checkpoint_file: 'checkpoint.hdf5'

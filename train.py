@@ -8,18 +8,18 @@ from model.ssd import SSD
 from preprocessor import tf_dataset
 from preprocessor.pre_processor import PreProcessor
 from preprocessor.tf_dataset_int_spec import TfDatasetIntegrationSpec
-from util.utils import load_config_file, print_model
+from util.params import Params
+from util.utils import print_model
 
 
-def main(config_file: str):
+def main(params_path: str):
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    config = load_config_file(config_file)
-    os.makedirs(config['log_dir'], exist_ok=True)
-    os.makedirs(config['checkpoint_dir'], exist_ok=True)
+    config = Params(file_path=params_path)
+    os.makedirs(config.log_dir, exist_ok=True)
+    os.makedirs(config.checkpoint_dir, exist_ok=True)
 
     # init objects
-    generator = create_generator(config)
     sess = tf.Session()
     tf.keras.backend.set_session(sess)
     iterator, init_op = tf_dataset.input_fn(True,
@@ -33,17 +33,17 @@ def main(config_file: str):
     ssd_loss = Loss()
 
     print('Compile Model for Training')
-    ssd_model.compile(optimizer=tf.keras.optimizers.Adam(config['learning_rate']),
+    ssd_model.compile(optimizer=tf.keras.optimizers.Adam(config.learning_rate),
                       loss=ssd_loss.calculate_loss,
                       metrics=['acc'])
     ssd_model.summary()
 
-    loss_to_monitor = 'val_loss' if config['use_eval'] else 'loss'
+    loss_to_monitor = 'val_loss' if config.use_eval else 'loss'
     callbacks = [
-        tf.keras.callbacks.TensorBoard(log_dir=config['log_dir']),
+        tf.keras.callbacks.TensorBoard(log_dir=config.log_dir),
         tf.keras.callbacks.EarlyStopping(patience=2,
                                          monitor=loss_to_monitor),
-        tf.keras.callbacks.ModelCheckpoint(filepath=config['checkpoint_dir'] + config['checkpoint_file'],
+        tf.keras.callbacks.ModelCheckpoint(filepath=config.checkpoint_dir + config.checkpoint_file,
                                            monitor=loss_to_monitor,
                                            verbose=0,
                                            save_best_only=True,
@@ -66,8 +66,8 @@ def main(config_file: str):
                   )
     print('Training completed. Saving Model...')
 
-    ssd_model.save_weights(config['weights_file'], save_format='h5')
-    ssd_model.save(config['model_file'])
+    ssd_model.save_weights(config.weights_file, save_format='h5')
+    ssd_model.save(config.model_file)
     print('Model saved. Training complete')
 
 
@@ -80,5 +80,5 @@ if __name__ == "__main__":
     try:
         config_file = sys.argv[1]
     except IndexError:
-        config_file = 'config.yml'
+        config_file = 'params.json'
     main(config_file)
