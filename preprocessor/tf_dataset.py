@@ -27,15 +27,15 @@ def _encode_label(image, label, encoder: LabelEncoder):
     """Encode
 
     """
-    scale1 = tf.random_uniform(shape=[38,38,6,7], dtype=tf.float32)
-    scale2 = tf.random_uniform(shape=[19,19,6,7], dtype=tf.float32)
-    scale3 = tf.random_uniform(shape=[10,10,6,7], dtype=tf.float32)
-    scale4 = tf.random_uniform(shape=[5,5,6,7], dtype=tf.float32)
-    scale5 = tf.random_uniform(shape=[3,3,6,7], dtype=tf.float32)
-    scale6 = tf.random_uniform(shape=[1,1,6,7], dtype=tf.float32)
-    encoded_label = {scale1, scale2, scale3, scale4, scale5, scale6}
+    scale1 = tf.random_uniform(shape=[38,38,4,84], dtype=tf.float32)
+    scale2 = tf.random_uniform(shape=[19,19,6,84], dtype=tf.float32)
+    scale3 = tf.random_uniform(shape=[10,10,6,84], dtype=tf.float32)
+    scale4 = tf.random_uniform(shape=[5,5,6,84], dtype=tf.float32)
+    scale5 = tf.random_uniform(shape=[3,3,4,84], dtype=tf.float32)
+    scale6 = tf.random_uniform(shape=[1,1,4,84], dtype=tf.float32)
+    encoded_label = (scale1, scale2, scale3, scale4, scale5, scale6)
     # asdf = tf.stack(encoded_label, axis=3)
-    return image, scale1
+    return image, encoded_label
 
 
 
@@ -113,7 +113,7 @@ def input_fn(is_training: bool, filenames: [], labels: [], params):
     load_img = lambda f, l: _load_image(f, l, params.image_width, params.image_height)
     augment_img = lambda f, l: _augment_image(f, l, params.use_random_flip)
 
-    with tf.device('/cpu:0'):
+    with tf.device('/cpu:0') and tf.variable_scope('feeding_data'):
         if is_training:
             dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
                        .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
@@ -137,11 +137,11 @@ def input_fn(is_training: bool, filenames: [], labels: [], params):
             iterator = dataset.make_one_shot_iterator()
             return iterator
 
-        # in regular mode create iterator init operation instread
+        # in regular mode create iterator init operation instead
         # Create re-initializable iterator from dataset
         iterator = dataset.make_initializable_iterator()
         iterator_init_op = iterator.initializer
-        # images, labels = iterator.get_next()
+        iterator = dataset.make_one_shot_iterator()
 
         inputs = {'iterator': iterator, 'iterator_init_op': iterator_init_op}
         return inputs
