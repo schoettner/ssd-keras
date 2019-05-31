@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.data import Iterator
+from tensorflow.python.eager import context
 
 from preprocessor.label_encoder import LabelEncoder
 
@@ -17,7 +18,7 @@ def _load_label(image_filename: str, label_filename: str):
     """
     label_string = tf.read_file(label_filename)
     label_split = tf.string_split([label_string], delimiter=',').values  # use .values to get tensor from sparse tensor
-    label_int = tf.strings.to_number(label_split, out_type=tf.dtypes.int32)
+    label_int = tf.strings.to_number(label_split, out_type=tf.int32)
     label_reshaped = tf.reshape(label_int, shape=[-1, 5])
     return image_filename, label_reshaped
 
@@ -26,8 +27,16 @@ def _encode_label(image, label, encoder: LabelEncoder):
     """Encode
 
     """
-    encoded_label = label
-    return image, encoded_label
+    scale1 = tf.random_uniform(shape=[38,38,6,7], dtype=tf.float32)
+    scale2 = tf.random_uniform(shape=[19,19,6,7], dtype=tf.float32)
+    scale3 = tf.random_uniform(shape=[10,10,6,7], dtype=tf.float32)
+    scale4 = tf.random_uniform(shape=[5,5,6,7], dtype=tf.float32)
+    scale5 = tf.random_uniform(shape=[3,3,6,7], dtype=tf.float32)
+    scale6 = tf.random_uniform(shape=[1,1,6,7], dtype=tf.float32)
+    encoded_label = {scale1, scale2, scale3, scale4, scale5, scale6}
+    # asdf = tf.stack(encoded_label, axis=3)
+    return image, scale1
+
 
 
 def _load_image(filename: str, label, img_width: int, img_height: int):
@@ -65,7 +74,7 @@ def _augment_image(image, label, use_random_flip):
     return image, label
 
 
-def input_fn(is_training: bool, filenames: [], labels: [], params) -> Iterator:
+def input_fn(is_training: bool, filenames: [], labels: [], params):
     """Input function for the SSD dataset.
 
     Args:
@@ -123,12 +132,16 @@ def input_fn(is_training: bool, filenames: [], labels: [], params) -> Iterator:
                        .prefetch(1)  # make sure you always have one batch ready to serve
                        )
 
+        # if in eager mode, return iterator for testing
+        if context.executing_eagerly():
+            iterator = dataset.make_one_shot_iterator()
+            return iterator
+
+        # in regular mode create iterator init operation instread
         # Create re-initializable iterator from dataset
-        # iterator = dataset.make_initializable_iterator()
-        # iterator_init_op = iterator.initializer
-        # images, labels = iterator.get_next()
-        #
-        # inputs = {'images': images, 'labels': labels, 'iterator_init_op': iterator_init_op}
-        # return inputs
         iterator = dataset.make_initializable_iterator()
-        return iterator
+        iterator_init_op = iterator.initializer
+        # images, labels = iterator.get_next()
+
+        inputs = {'iterator': iterator, 'iterator_init_op': iterator_init_op}
+        return inputs

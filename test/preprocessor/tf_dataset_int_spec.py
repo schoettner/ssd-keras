@@ -12,8 +12,9 @@ class TfDatasetIntegrationSpec:
             train_labels = self.given_test_labels()
             params = self.given_test_params()
             train_inputs = tf_dataset.input_fn(True, train_filenames, train_labels, params)
-            sess.run([train_inputs.initializer])
-            result = train_inputs.get_next()
+            sess.run([train_inputs['iterator_init_op']])
+            iterator = train_inputs['iterator']
+            img, label = iterator.get_next()
             sess.close()
 
         assert True
