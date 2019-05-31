@@ -1,12 +1,14 @@
 import tensorflow as tf
-from tensorflow.python.data import Iterator
 from tensorflow.python.eager import context
 
 from preprocessor.label_encoder import LabelEncoder
 
 """ this is heavily inspired by
 https://cs230-stanford.github.io/tensorflow-input-data.html
+and
+https://www.tensorflow.org/guide/datasets
 """
+
 
 def _load_label(image_filename: str, label_filename: str):
     """Load the label from the filename(for both training and validation).
@@ -27,16 +29,15 @@ def _encode_label(image, label, encoder: LabelEncoder):
     """Encode
 
     """
-    scale1 = tf.random_uniform(shape=[38,38,4,84], dtype=tf.float32)
-    scale2 = tf.random_uniform(shape=[19,19,6,84], dtype=tf.float32)
-    scale3 = tf.random_uniform(shape=[10,10,6,84], dtype=tf.float32)
-    scale4 = tf.random_uniform(shape=[5,5,6,84], dtype=tf.float32)
-    scale5 = tf.random_uniform(shape=[3,3,4,84], dtype=tf.float32)
-    scale6 = tf.random_uniform(shape=[1,1,4,84], dtype=tf.float32)
+    # return random data for the moment. will be fixed later
+    scale1 = tf.random_uniform(shape=[38, 38, 4, 84], dtype=tf.float32)
+    scale2 = tf.random_uniform(shape=[19, 19, 6, 84], dtype=tf.float32)
+    scale3 = tf.random_uniform(shape=[10, 10, 6, 84], dtype=tf.float32)
+    scale4 = tf.random_uniform(shape=[5, 5, 6, 84], dtype=tf.float32)
+    scale5 = tf.random_uniform(shape=[3, 3, 4, 84], dtype=tf.float32)
+    scale6 = tf.random_uniform(shape=[1, 1, 4, 84], dtype=tf.float32)
     encoded_label = (scale1, scale2, scale3, scale4, scale5, scale6)
-    # asdf = tf.stack(encoded_label, axis=3)
     return image, encoded_label
-
 
 
 def _load_image(filename: str, label, img_width: int, img_height: int):
@@ -123,10 +124,12 @@ def input_fn(is_training: bool, filenames: [], labels: [], params):
                        .map(load_img, num_parallel_calls=params.num_parallel_calls)
                        .map(augment_img, num_parallel_calls=params.num_parallel_calls)
                        .batch(params.batch_size)
-                       .prefetch(3)  # make sure you always have three batches ready to serve
+                       .prefetch(1)  # make sure you always have one batch ready to serve
                        )
         else:
             dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
+                       .map(load_label)
+                       .map(encode_label)
                        .map(load_img)
                        .batch(params.batch_size)
                        .prefetch(1)  # make sure you always have one batch ready to serve
@@ -141,7 +144,4 @@ def input_fn(is_training: bool, filenames: [], labels: [], params):
         # Create re-initializable iterator from dataset
         iterator = dataset.make_initializable_iterator()
         iterator_init_op = iterator.initializer
-        iterator = dataset.make_one_shot_iterator()
-
-        inputs = {'iterator': iterator, 'iterator_init_op': iterator_init_op}
-        return inputs
+        return iterator, iterator_init_op

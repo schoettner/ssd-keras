@@ -20,13 +20,13 @@ def main(config_file: str):
 
     # init objects
     generator = create_generator(config)
-    with tf.Session() as sess:
-        train_inputs = tf_dataset.input_fn(True,
-                                           TfDatasetIntegrationSpec.given_test_image(),
-                                           TfDatasetIntegrationSpec.given_test_labels(),
-                                           TfDatasetIntegrationSpec.given_test_params())
-        sess.run(train_inputs['iterator_init_op'])
-        tf.initializers.global_variables()
+    sess = tf.Session()
+    tf.keras.backend.set_session(sess)
+    iterator, init_op = tf_dataset.input_fn(True,
+                                       TfDatasetIntegrationSpec.given_test_image(),
+                                       TfDatasetIntegrationSpec.given_test_labels(),
+                                       TfDatasetIntegrationSpec.given_test_params())
+    sess.run(init_op)
 
     ssd_model = SSD().build_model()
     print_model(ssd_model)
@@ -58,7 +58,7 @@ def main(config_file: str):
     #                         initial_epoch=0,
     #                         epochs=config['epochs'])
     # https://github.com/tensorflow/tensorflow/issues/20022
-    ssd_model.fit(x=train_inputs['iterator'],
+    ssd_model.fit(x=iterator,
                   steps_per_epoch=1,
                   callbacks=callbacks,
                   initial_epoch=0,
