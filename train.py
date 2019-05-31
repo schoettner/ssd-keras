@@ -23,7 +23,7 @@ def main(params_path: str):
     # generator = create_generator(config)
     iterator = create_iterator()
 
-    ssd_model = SSD().build_model()
+    ssd_model = SSD(config).build_model()
     print_model(ssd_model)
     ssd_loss = Loss()
 

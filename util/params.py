@@ -1,6 +1,7 @@
 import json
 
 from dataclasses import dataclass
+from typing import List
 
 # https://github.com/cs230-stanford/cs230-code-examples/blob/master/tensorflow/vision/model/utils.py
 @dataclass
@@ -19,6 +20,12 @@ class Params:
     validation_steps: int = 10
     learning_rate: float = 0.001
     use_eval: bool = False
+    ratios = [[1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+              [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+              [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+              [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+              [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
+              [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0]]
 
     # augmentation params
     use_random_flip: bool = False
