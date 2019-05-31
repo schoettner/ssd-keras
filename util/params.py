@@ -1,23 +1,43 @@
 import json
-import yaml
 
+from dataclasses import dataclass
 
 # https://github.com/cs230-stanford/cs230-code-examples/blob/master/tensorflow/vision/model/utils.py
-class Params(object):
+@dataclass
+class Params:
 
-    def __init__(self, file_path: str, is_yml: bool = False):
-        if is_yml:
-            self.__update_yml__(file_path)
+    # input dimensions
+    num_classes: int = 2
+    img_width: int = 300
+    img_height: int = 300
+
+    # training parameters
+    batch_size: int = 2
+    num_epochs: int = 2
+    num_parallel_calls: int = 4
+    steps_per_epoch: int = 10
+    validation_steps: int = 10
+    learning_rate: float = 0.001
+    use_eval: bool = False
+
+    # augmentation params
+    use_random_flip: bool = False
+
+    # i/o params
+    train_data_path: str = '/data/train'
+    eval_data_path: str = './data/eval'
+    log_dir: str = 'utput/log/'
+    checkpoint_dir: str = 'output/checkpoints/'
+    checkpoint_file: str = 'checkpoint.hdf5'
+    weights_file: str = 'output/ssd-weights.h5'
+    model_file: str = 'utput/ssd-model.hdf5'
+
+    def __init__(self, file_path: str):
         self.__update_json__(file_path)
 
     def __update_json__(self, json_path):
         with open(json_path) as f:
             params = json.load(f)
-            self.__dict__.update(params)
-
-    def __update_yml__(self, yml_path):
-        with open(yml_path) as f:
-            params = yaml.load(f)
             self.__dict__.update(params)
 
     @property

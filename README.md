@@ -2,6 +2,8 @@
 Implementation of [SSD](https://arxiv.org/abs/1512.02325) (Single Shot MultiBox Detector) with [Keras](https://keras.io/) and [Tensorflow](https://www.tensorflow.org/) backend.
 The implementation is also heavily motivated by [YOLOv3](https://arxiv.org/abs/1804.02767).
 
+To make use of python's @dataclass, make sure to use python >= 3.7!
+
 ### Pre-Processor ###
 The pre processor is responsible to read image files and the labels. They are then converted to *(x, y_true)* with the
 help of an encoder.

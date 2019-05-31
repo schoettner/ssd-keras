@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.python.eager import context
 
 from preprocessor.np.label_encoder import LabelEncoder
+from util.params import Params
 
 """ this is heavily inspired by
 https://cs230-stanford.github.io/tensorflow-input-data.html
@@ -75,7 +76,7 @@ def _augment_image(image, label, use_random_flip):
     return image, label
 
 
-def input_fn(is_training: bool, filenames: [], labels: [], params):
+def input_fn(is_training: bool, filenames: [], labels: [], params: Params):
     """Input function for the SSD dataset.
 
     Args:

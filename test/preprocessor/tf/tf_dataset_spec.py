@@ -1,8 +1,7 @@
+import tensorflow as tf
 from tensorflow.python.framework.test_util import run_in_graph_and_eager_modes
 
 from preprocessor.tf import tf_dataset
-import tensorflow as tf
-
 from util.params import Params
 
 
@@ -26,7 +25,7 @@ class TfDatasetSpec(tf.test.TestCase):
             img, label = sess.run(iterator.get_next())
             assert img.shape == (2, 300, 300, 3)
             assert len(label) == 6
-            assert label[0].shape == (2,38,38,4,84)
+            assert label[0].shape == (2, 38, 38, 4, 84)
             sess.close()
 
     @staticmethod
