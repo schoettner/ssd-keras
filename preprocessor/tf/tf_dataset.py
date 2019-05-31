@@ -111,7 +111,7 @@ def input_fn(is_training: bool, filenames: [], labels: [], params):
     # Create a Dataset serving batches of images and labels
     load_label = lambda f, l: _load_label(f, l)
     encode_label = lambda f, l: _encode_label(f, l, encoder)
-    load_img = lambda f, l: _load_image(f, l, params.image_width, params.image_height)
+    load_img = lambda f, l: _load_image(f, l, params.img_width, params.img_height)
     augment_img = lambda f, l: _augment_image(f, l, params.use_random_flip)
 
     with tf.device('/cpu:0') and tf.variable_scope('feeding_data'):

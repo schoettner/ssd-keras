@@ -4,7 +4,8 @@
   "img_height": 300,
 
   "batch_size": 1,
-  "epochs": 2,
+  "num_epochs": 2,
+  "num_parallel_calls": 4,
   "steps_per_epoch": 10,
   "validation_steps": 32,
   "learning_rate": 0.001,
