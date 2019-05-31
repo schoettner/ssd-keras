@@ -1,6 +1,6 @@
 import numpy as np
 
-from preprocessor.label_encoder import LabelEncoder
+from preprocessor.np.label_encoder import LabelEncoder
 
 
 class LabelEncoderSpec:

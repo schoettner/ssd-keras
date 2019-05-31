@@ -1,6 +1,6 @@
 import numpy as np
 
-from preprocessor.batch_loader import BatchLoader
+from preprocessor.np.batch_loader import BatchLoader
 
 
 class BatchLoaderSpec:

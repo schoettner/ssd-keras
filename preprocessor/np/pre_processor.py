@@ -1,7 +1,7 @@
 import numpy as np
 
-from preprocessor.batch_loader import BatchLoader
-from preprocessor.label_encoder import LabelEncoder
+from preprocessor.np.batch_loader import BatchLoader
+from preprocessor.np.label_encoder import LabelEncoder
 
 
 class PreProcessor(object):

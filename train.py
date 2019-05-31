@@ -5,9 +5,9 @@ import tensorflow as tf
 
 from model.loss import Loss
 from model.ssd import SSD
-from preprocessor import tf_dataset
-from preprocessor.pre_processor import PreProcessor
-from preprocessor.tf_dataset_int_spec import TfDatasetIntegrationSpec
+from preprocessor.tf import tf_dataset
+from preprocessor.np.pre_processor import PreProcessor
+from preprocessor.tf.tf_dataset_spec import TfDatasetSpec
 from util.params import Params
 from util.utils import print_model
 
@@ -20,13 +20,8 @@ def main(params_path: str):
     os.makedirs(config.checkpoint_dir, exist_ok=True)
 
     # init objects
-    sess = tf.Session()
-    tf.keras.backend.set_session(sess)
-    iterator, init_op = tf_dataset.input_fn(True,
-                                       TfDatasetIntegrationSpec.given_test_image(),
-                                       TfDatasetIntegrationSpec.given_test_labels(),
-                                       TfDatasetIntegrationSpec.given_test_params())
-    sess.run(init_op)
+    # generator = create_generator(config)
+    iterator = create_iterator()
 
     ssd_model = SSD().build_model()
     print_model(ssd_model)
@@ -41,8 +36,7 @@ def main(params_path: str):
     loss_to_monitor = 'val_loss' if config.use_eval else 'loss'
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=config.log_dir),
-        tf.keras.callbacks.EarlyStopping(patience=2,
-                                         monitor=loss_to_monitor),
+        tf.keras.callbacks.EarlyStopping(patience=2, monitor=loss_to_monitor),
         tf.keras.callbacks.ModelCheckpoint(filepath=config.checkpoint_dir + config.checkpoint_file,
                                            monitor=loss_to_monitor,
                                            verbose=0,
@@ -57,6 +51,7 @@ def main(params_path: str):
     #                         callbacks=callbacks,
     #                         initial_epoch=0,
     #                         epochs=config['epochs'])
+
     # https://github.com/tensorflow/tensorflow/issues/20022
     ssd_model.fit(x=iterator,
                   steps_per_epoch=1,
@@ -73,6 +68,17 @@ def main(params_path: str):
 
 def create_generator(config):
     return PreProcessor(config).get_random_training_generator()
+
+
+def create_iterator():
+    sess = tf.Session()
+    tf.keras.backend.set_session(sess)
+    iterator, init_op = tf_dataset.input_fn(True,
+                                            TfDatasetSpec.given_test_image(),
+                                            TfDatasetSpec.given_test_labels(),
+                                            TfDatasetSpec.given_test_params())
+    sess.run(init_op)
+    return iterator
 
 
 if __name__ == "__main__":

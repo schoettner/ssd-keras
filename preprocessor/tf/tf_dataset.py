@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.eager import context
 
-from preprocessor.label_encoder import LabelEncoder
+from preprocessor.np.label_encoder import LabelEncoder
 
 """ this is heavily inspired by
 https://cs230-stanford.github.io/tensorflow-input-data.html

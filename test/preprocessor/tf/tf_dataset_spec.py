@@ -1,6 +1,6 @@
 from tensorflow.python.framework.test_util import run_in_graph_and_eager_modes
 
-from preprocessor import tf_dataset
+from preprocessor.tf import tf_dataset
 import tensorflow as tf
 
 from util.params import Params
