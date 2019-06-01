@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from preprocessor.label_encoder import LabelEncoder
+from preprocessor.np.label_encoder import LabelEncoder
 
 
 class LabelEncoderInitSpec:

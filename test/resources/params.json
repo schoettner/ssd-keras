@@ -1,0 +1,15 @@
+{
+  "num_classes": 2,
+  "img_width": 300,
+  "img_height": 300,
+
+  "batch_size": 2,
+  "num_epochs": 1,
+  "num_parallel_calls": 4,
+  "steps_per_epoch": 10,
+
+  "feature_map_sizes": 0,
+  "ratios": 0,
+  "iou": 0.7,
+  "use_random_flip": false
+}

@@ -6,24 +6,20 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.layers.base import Layer
 
 from model.l2_normalization_layer import L2Normalization
+from util.params import Params
 
 
 class SSD:
 
-    def __init__(self, mode: str = 'train', base_network: str = 'vgg-16'):
+    def __init__(self, params: Params, mode: str = 'train', base_network: str = 'vgg-16'):
         self.mode = mode
         self.base_network = base_network
-        self.num_classes = 80
-        self.img_width = 300
-        self.img_height = 300
+        self.num_classes = params.num_classes
+        self.img_width = params.img_width
+        self.img_height = params.img_height
         self.channels = 3
         # default in ssd is: 1, 2, 3, 1/2, 1/3 == 6 boxes (incl s'k) and 6 scales
-        self.aspect_ratios_per_layer = [[1.0, 2.0, 0.5],
-                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
-                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
-                                        [1.0, 2.0, 0.5, 3.0, 1.0 / 3.0],
-                                        [1.0, 2.0, 0.5],
-                                        [1.0, 2.0, 0.5]]
+        self.aspect_ratios_per_layer = params.ratios
         self.num_bboxes_per_layer = []
         for layer in self.aspect_ratios_per_layer:
             if 1 in layer:
@@ -31,6 +27,7 @@ class SSD:
                 self.num_bboxes_per_layer.append(len(layer) + 1)
             else:
                 self.num_bboxes_per_layer.append(len(layer))
+        print('Boxes per scale: {}'.format(self.num_bboxes_per_layer))
 
     def build_model(self):
         model_input = Input(shape=(self.img_width, self.img_height, self.channels))

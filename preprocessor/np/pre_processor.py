@@ -1,7 +1,7 @@
 import numpy as np
 
-from preprocessor.batch_loader import BatchLoader
-from preprocessor.label_encoder import LabelEncoder
+from preprocessor.np.batch_loader import BatchLoader
+from preprocessor.np.label_encoder import LabelEncoder
 
 
 class PreProcessor(object):
@@ -46,10 +46,10 @@ class PreProcessor(object):
 
             # y = np.random.randint(config['num_classes'],
             #                       size=config['batch_size'])
-            y1 = np.random.rand(batch_size, 38, 38, 4, 84)
-            y2 = np.random.rand(batch_size, 19, 19, 6, 84)
-            y3 = np.random.rand(batch_size, 10, 10, 6, 84)
-            y4 = np.random.rand(batch_size, 5, 5, 6, 84)
-            y5 = np.random.rand(batch_size, 3, 3, 4, 84)
-            y6 = np.random.rand(batch_size, 1, 1, 4, 84)
+            y1 = np.random.rand(batch_size, 38, 38, 4, 6)
+            y2 = np.random.rand(batch_size, 19, 19, 6, 6)
+            y3 = np.random.rand(batch_size, 10, 10, 6, 6)
+            y4 = np.random.rand(batch_size, 5, 5, 6, 6)
+            y5 = np.random.rand(batch_size, 3, 3, 4, 6)
+            y6 = np.random.rand(batch_size, 1, 1, 4, 6)
             yield x, [y1, y2, y3, y4, y5, y6]

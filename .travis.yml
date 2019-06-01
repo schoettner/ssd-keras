@@ -1,5 +1,6 @@
+dist: xenial  # required for python >= 3.7
 language: python
-python: 3.5
+python: 3.7
 install:
   - pip install -r requirements.txt # install libs to run tests
 script:
