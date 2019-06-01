@@ -7,6 +7,19 @@ class EncoderLayer(tf.keras.layers.Layer):
     def __init__(self):
         super(EncoderLayer, self).__init__()
 
+    def build(self, input_shape):
+        # enable lazy init of layer
+        #  https://www.tensorflow.org/alpha/guide/keras/custom_layers_and_models
+        # build is executed on first __call__
+        # prevents cotrl call when doing random
+        self.test = tf.constant([1])
+
+    def get_config(self):
+        config = super(EncoderLayer,self).get_config()
+        config.update({})
+        # required for the layer to be serializable
+        return config
+
     def call(self, ground_truth: Tensor, **kwargs) -> tuple:
         return (tf.zeros(shape=[1, 3]), tf.zeros(shape=[1, 3]))
 
@@ -19,3 +32,4 @@ class EncoderLayer(tf.keras.layers.Layer):
         scale6 = tf.random_uniform(shape=[1, 1, 4, 6], dtype=tf.float32)
         encoded_label = (scale1, scale2, scale3, scale4, scale5, scale6)
         return encoded_label
+
