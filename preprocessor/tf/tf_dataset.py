@@ -1,8 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.eager import context
 
-from preprocessor.np.label_encoder import LabelEncoder
-from preprocessor.tf import tf_encoder
+from preprocessor.tf.tf_encoder_layer import EncoderLayer
 from util.params import Params
 
 """ this is heavily inspired by
@@ -27,11 +26,12 @@ def _load_label(image_filename: str, label_filename: str):
     return image_filename, label_reshaped
 
 
-def _encode_label(image, label, encoder: LabelEncoder):
+def _encode_label(image, label, encoder: EncoderLayer):
     """Encode
 
     """
-    encoded_label = tf_encoder.random_label(label)
+    # encoded_label = encoder.call(label)
+    encoded_label = encoder.call_random()
     return image, encoded_label
 
 
@@ -101,7 +101,7 @@ def input_fn(is_training: bool, filenames: [], labels: [], params: Params):
     #                        feature_map_sizes=params.feature_map_sizes,
     #                        ratios=params.ratios,
     #                        iou_threshold=params.iou)
-    encoder = None
+    encoder = EncoderLayer()
 
     # Create a Dataset serving batches of images and labels
     load_label = lambda f, l: _load_label(f, l)
