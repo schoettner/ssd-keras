@@ -71,14 +71,15 @@ def create_generator(config):
 
 
 def create_iterator():
-    sess = tf.Session()
-    tf.keras.backend.set_session(sess)
-    iterator, init_op = tf_dataset.input_fn(True,
-                                            TfDatasetSpec.given_test_image(),
-                                            TfDatasetSpec.given_test_labels(),
-                                            TfDatasetSpec.given_test_params())
-    sess.run(init_op)
-    return iterator
+    with tf.name_scope('data_loader'):
+        sess = tf.Session()
+        tf.keras.backend.set_session(sess)
+        iterator, init_op = tf_dataset.input_fn(True,
+                                                TfDatasetSpec.given_test_image(),
+                                                TfDatasetSpec.given_test_labels(),
+                                                TfDatasetSpec.given_test_params())
+        sess.run(init_op)
+        return iterator
 
 
 if __name__ == "__main__":
