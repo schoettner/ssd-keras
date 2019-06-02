@@ -56,14 +56,43 @@ class EncoderLayer(tf.keras.layers.Layer):
                                         dtype=tf.float32)
 
         self.class_predictions = tf.eye(num_classes, name='const_class_identity_matrix')
-
         self.label_output_shape = (*feature_map_size, num_boxes, num_classes + 4)
+
+        self.default_boxes = self.__calculate_default_boxes()
+
+    def __calculate_default_boxes(self,
+                                cells_on_x: int = 38,
+                                cells_on_y: int = 38,
+                                img_width: int = 300,
+                                img_height: int = 300,
+                                offset: float = 0.5):
+        offset = 0.5
+
+        cell_pixel_width = img_width // cells_on_x
+        cell_pixel_height = img_height // cells_on_y
+        ratios_sqrt = tf.sqrt(self.ratios)
+
+        # calculate the absolute width and height of the default boxes
+        # see SSD paper page 6 for calculation details
+        box_width = self.scaling_factor * cell_pixel_width * ratios_sqrt
+        box_height = self.scaling_factor * cell_pixel_height / ratios_sqrt
+        # if 1 in self.ratios:  # does not work
+        #     tf.concat(box_width, self.scaling_factor_plus_1 * cell_pixel_width)
+        #     tf.concat(box_height, self.scaling_factor_plus_1 * cell_pixel_height)
+
+        # calculate x and y center of the cells
+        center_x = tf.linspace(start=offset * cell_pixel_width,
+                               stop=(offset + cells_on_x - 1) * cell_pixel_width,
+                               num=cells_on_x)
+
+        return center_x
 
     def build(self, input_shape):
         """
         enable lazy init of layer. build is executed on first __call__()
         """
-        print('build')
+        print('build the default boxes')
+
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()

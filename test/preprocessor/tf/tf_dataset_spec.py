@@ -25,7 +25,7 @@ class TfDatasetSpec(tf.test.TestCase):
             img, label = sess.run(iterator.get_next())
             assert img.shape == (2, 300, 300, 3)
             assert len(label) == 6
-            assert label[0].shape == (2, 38, 38, 4, 84)
+            assert label[0].shape == (2, 38, 38, 4, 6)
             sess.close()
 
     @staticmethod
