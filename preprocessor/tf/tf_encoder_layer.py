@@ -61,15 +61,14 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.default_boxes = self.__calculate_default_boxes()
 
     def __calculate_default_boxes(self,
-                                cells_on_x: int = 38,
-                                cells_on_y: int = 38,
-                                img_width: int = 300,
-                                img_height: int = 300,
-                                offset: float = 0.5):
-        offset = 0.5
+                                  cells_on_x: int = 38,
+                                  cells_on_y: int = 38,
+                                  img_width: int = 300,
+                                  img_height: int = 300,
+                                  offset: float = 0.5):
 
-        cell_pixel_width = img_width // cells_on_x
-        cell_pixel_height = img_height // cells_on_y
+        cell_pixel_width = img_width / cells_on_x
+        cell_pixel_height = img_height / cells_on_y
         ratios_sqrt = tf.sqrt(self.ratios)
 
         # calculate the absolute width and height of the default boxes
@@ -84,8 +83,18 @@ class EncoderLayer(tf.keras.layers.Layer):
         center_x = tf.linspace(start=offset * cell_pixel_width,
                                stop=(offset + cells_on_x - 1) * cell_pixel_width,
                                num=cells_on_x)
+        center_y = tf.linspace(start=offset + cell_pixel_height,
+                               stop=(offset + cells_on_y - 1) * cell_pixel_height,
+                               num=cells_on_y)
+        grid = tf.meshgrid(center_x, center_y, indexing='xy', name='cartesian_product')
+        return grid
 
-        return center_x
+    @staticmethod
+    def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
+        # https://stackoverflow.com/questions/47132665/cartesian-product-in-tensorflow
+        c = tf.stack(tf.meshgrid(a, b, indexing='ij'), axis=-1)
+        c = tf.reshape(c, (-1, 2))
+        return c
 
     def build(self, input_shape):
         """
