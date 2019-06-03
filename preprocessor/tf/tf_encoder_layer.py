@@ -63,7 +63,7 @@ class EncoderLayer(tf.keras.layers.Layer):
                                   cells_on_y: int = 38,
                                   img_width: int = 300,
                                   img_height: int = 300,
-                                  num_boxes: int = 6,
+                                  num_boxes_per_cell: int = 6,
                                   offset: float = 0.5):
 
         cell_pixel_width = img_width / cells_on_x
@@ -91,6 +91,12 @@ class EncoderLayer(tf.keras.layers.Layer):
         # for each cell. add the boxes to the center
         # e.g. box at 75,75 with boxes [[114,114][162,80][80,162]]
         # will be
+        grid = K.repeat(cartesian, num_boxes_per_cell)
+        w_h = tf.tile(boxes_w_h, (num_cells, 1))
+        print(w_h)
+        # asdf = tf.concat((grid, boxes_w_h))
+        print('grid after repeat')
+        print(grid)
         #[75, 75, 114, 114]
         #[75, 75, 162, 80]
         #[75, 75, 80, 162]
