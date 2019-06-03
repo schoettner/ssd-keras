@@ -1,9 +1,7 @@
 import tensorflow as tf
 from tensorflow import Tensor
 
-
 import tensorflow.keras.backend as K
-
 
 class EncoderLayer(tf.keras.layers.Layer):
     """https://www.tensorflow.org/alpha/guide/keras/custom_layers_and_models
@@ -65,6 +63,7 @@ class EncoderLayer(tf.keras.layers.Layer):
                                   cells_on_y: int = 38,
                                   img_width: int = 300,
                                   img_height: int = 300,
+                                  num_boxes: int = 6,
                                   offset: float = 0.5):
 
         cell_pixel_width = img_width / cells_on_x
@@ -73,21 +72,29 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         # calculate the absolute width and height of the default boxes
         # see SSD paper page 6 for calculation details
-        box_width = self.scaling_factor * cell_pixel_width * ratios_sqrt
-        box_height = self.scaling_factor * cell_pixel_height / ratios_sqrt
+        box_widths = self.scaling_factor * cell_pixel_width * ratios_sqrt
+        box_heights = self.scaling_factor * cell_pixel_height / ratios_sqrt
         # if 1 in self.ratios:  # does not work
         #     tf.concat(box_width, self.scaling_factor_plus_1 * cell_pixel_width)
         #     tf.concat(box_height, self.scaling_factor_plus_1 * cell_pixel_height)
 
         # calculate x and y center of the cells
+        boxes_w_h = tf.stack((box_widths, box_heights), axis=1)
         center_x = tf.linspace(start=offset * cell_pixel_width,
                                stop=(offset + cells_on_x - 1) * cell_pixel_width,
                                num=cells_on_x)
         center_y = tf.linspace(start=offset + cell_pixel_height,
                                stop=(offset + cells_on_y - 1) * cell_pixel_height,
                                num=cells_on_y)
-        grid = tf.meshgrid(center_x, center_y, indexing='xy', name='cartesian_product')
-        return grid
+        cartesian = self.cartesian_product(center_x, center_y)
+        num_cells = cells_on_x * cells_on_y
+        # for each cell. add the boxes to the center
+        # e.g. box at 75,75 with boxes [[114,114][162,80][80,162]]
+        # will be
+        #[75, 75, 114, 114]
+        #[75, 75, 162, 80]
+        #[75, 75, 80, 162]
+        return cartesian
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:

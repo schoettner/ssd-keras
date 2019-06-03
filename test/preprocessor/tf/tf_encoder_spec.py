@@ -18,7 +18,7 @@ class TfEncoderSpec(tf.test.TestCase):
 
         a = tf.constant((1, 2))
         b = tf.constant((3, 4))
-        c = EncoderLayer.cartesian_product(a,b)
+        c = EncoderLayer.cartesian_product(a, b)
         print(c)
         cartesian = ([[1, 2], [1, 4]],
                      [[2, 3], [2, 4]])
