@@ -60,7 +60,7 @@ class EncoderLayer(tf.keras.layers.Layer):
                                                             cells_on_y=feature_map_size[1],
                                                             img_width=img_width,
                                                             img_height=img_height,
-                                                            num_boxes_per_cell=5)
+                                                            num_boxes_per_cell=num_boxes)
 
     def __calculate_default_boxes(self,
                                   cells_on_x: int = 38,
@@ -87,7 +87,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         center_x = tf.linspace(start=offset * cell_pixel_width,
                                stop=(offset + cells_on_x - 1) * cell_pixel_width,
                                num=cells_on_x)
-        center_y = tf.linspace(start=offset + cell_pixel_height,
+        center_y = tf.linspace(start=offset * cell_pixel_height,
                                stop=(offset + cells_on_y - 1) * cell_pixel_height,
                                num=cells_on_y)
         cartesian_center = self.cartesian_product(center_x, center_y)
@@ -95,16 +95,17 @@ class EncoderLayer(tf.keras.layers.Layer):
         center_grid = K.repeat(cartesian_center, num_boxes_per_cell)
         center_grid_full = tf.reshape(center_grid, shape=(num_cells * num_boxes_per_cell, 2))
         w_h = tf.tile(boxes_w_h, (num_cells, 1))
-        # w_h = tf.cast(w_h, dtype=tf.float32)
 
-        print("shape of grid: {}".format(center_grid_full.get_shape()))
-        print("grid: {}".format(center_grid_full))
-        print("shape of w_h: {}".format(w_h.get_shape()))
-        print("w_h: {}".format(w_h))
+        # print("shape of grid: {}".format(center_grid_full.get_shape()))
+        # print("grid: {}".format(center_grid_full))
+        # print("shape of w_h: {}".format(w_h.get_shape()))
+        # print("w_h: {}".format(w_h))
 
-        # default_boxes = tf.concat(w_h, grid)
+        default_boxes = tf.concat([center_grid_full, w_h], axis=1)
+        # print("shape of default_boxes: {}".format(default_boxes.get_shape()))
+        # print("default_boxes: {}".format(default_boxes))
         # print(default_boxes)
-        return cartesian_center
+        return default_boxes
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:

@@ -7,12 +7,12 @@ from preprocessor.tf.tf_encoder_layer import EncoderLayer
 class TfEncoderSpec(tf.test.TestCase):
 
     @run_in_graph_and_eager_modes
-    def test_label_convert(self):
+    def test_default_box_for_2_by_2_map(self):
         encoder = EncoderLayer(feature_map_size=[2, 2],
                                ratios=[1, 2, 3, 1/2, 1/3],
                                s_k=0.76,
                                s_k_alt=0.82,
-                               num_classes=5)
+                               num_boxes=5,)
         label = encoder(tf.constant(1))
         default_boxes = encoder.default_boxes
 
@@ -42,7 +42,7 @@ class TfEncoderSpec(tf.test.TestCase):
             [225, 225, 65.82, 197.45],
             # [225, 225, 123, 123]
             ]
-        # tf.assert_equal(default_boxes, expected_boxes)
+        tf.assert_near(default_boxes, expected_boxes, atol=1)
 
     @run_in_graph_and_eager_modes
     def test_cartesian_calculation(self):
