@@ -96,19 +96,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         center_grid = K.repeat(cartesian_center, num_boxes_per_cell)
         center_grid_full = tf.reshape(center_grid, shape=(num_cells * num_boxes_per_cell, 2))
         w_h = tf.tile(boxes_w_h, (num_cells, 1))
-
-        # print("shape of grid: {}".format(center_grid_full.get_shape()))
-        # print("grid: {}".format(center_grid_full))
-        # print("shape of w_h: {}".format(w_h.get_shape()))
-        # print("w_h: {}".format(w_h))
-
         default_boxes = tf.concat([center_grid_full, w_h], axis=1)
-        # print("shape of default_boxes: {}".format(default_boxes.get_shape()))
-        # print("default_boxes: {}".format(default_boxes))
-        # print(default_boxes)
         return default_boxes
 
-    def calculate_iou(self, a: Tensor, b: Tensor) -> Tensor:
+    @staticmethod
+    def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
         x = 0
         y = 1
         w = 2
@@ -130,19 +122,20 @@ class EncoderLayer(tf.keras.layers.Layer):
         return iou
 
     @staticmethod
+    def set_values(boxes: Tensor, default_boxes: Tensor):
+        return tf.constant(0)
+
+    @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
         # https://stackoverflow.com/questions/47132665/cartesian-product-in-tensorflow
         c = tf.stack(tf.meshgrid(a, b, indexing='ij'), axis=-1)
         c = tf.reshape(c, (-1, 2))
         return c
 
-
-
     def build(self, input_shape):
         """
         enable lazy init of layer. build is executed on first __call__()
         """
-        print('build the default boxes')
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()

@@ -46,15 +46,14 @@ class TfEncoderSpec(tf.test.TestCase):
 
     @run_in_graph_and_eager_modes
     def test_iou(self):
-        encoder = EncoderLayer()
         a = tf.constant([[150, 150, 300, 300], [150, 150, 100, 100]], dtype=tf.float32)
         b = tf.constant([[150, 150, 300, 300], [150, 150, 200, 200]], dtype=tf.float32)
-        iou = encoder.calculate_iou(a, b)
+        iou = EncoderLayer.calculate_iou(a, b)
         tf.assert_equal(iou, [1, 0.25])
 
     @run_in_graph_and_eager_modes
     def test_convert_index(self):
-        iou = tf.constant([5,6,7,6,5], dtype=tf.float32)
+        iou = tf.constant([5, 6, 7, 6, 5], dtype=tf.float32)
         print(tf.where(tf.greater_equal(iou, 6)))
         assert True
 
@@ -63,7 +62,8 @@ class TfEncoderSpec(tf.test.TestCase):
         a = tf.constant((1, 2))
         b = tf.constant((3, 4))
         c = EncoderLayer.cartesian_product(a, b)
-        print(c)
-        cartesian = ([[1, 2], [1, 4]],
-                     [[2, 3], [2, 4]])
-        # tf.assert_equal(c, cartesian)
+        cartesian = [[1, 3],
+                     [1, 4],
+                     [2, 3],
+                     [2, 4]]
+        tf.assert_equal(c, cartesian)
