@@ -45,8 +45,15 @@ class TfEncoderSpec(tf.test.TestCase):
         tf.assert_near(default_boxes, expected_boxes, atol=1)
 
     @run_in_graph_and_eager_modes
-    def test_cartesian_calculation(self):
+    def test_iou(self):
+        encoder = EncoderLayer()
+        a = tf.constant([[150, 150, 300, 300], [150, 150, 100, 100]], dtype=tf.float32)
+        b = tf.constant([[150, 150, 300, 300], [150, 150, 200, 200]], dtype=tf.float32)
+        iou = encoder.calculate_iou(a, b)
+        tf.assert_equal(iou, [1, 0.25])
 
+    @run_in_graph_and_eager_modes
+    def test_cartesian_calculation(self):
         a = tf.constant((1, 2))
         b = tf.constant((3, 4))
         c = EncoderLayer.cartesian_product(a, b)

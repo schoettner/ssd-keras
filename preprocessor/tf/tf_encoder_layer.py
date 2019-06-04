@@ -114,16 +114,15 @@ class EncoderLayer(tf.keras.layers.Layer):
         w = 2
         h = 3
 
-        # calculate intersection
-        x1 = tf.maximum([a[x] - 0.5 * a[w], b[x] - 0.5 * b[w]])
-        x2 = tf.minimum([a[x] + 0.5 * a[w], b[x] + 0.5 * b[w]])
-        y1 = tf.maximum([a[y] - 0.5 * a[h], b[y] - 0.5 * b[h]])
-        y2 = tf.minimum([a[y] + 0.5 * a[h], b[y] + 0.5 * b[h]])
+        x1 = tf.maximum(a[:, x] - 0.5 * a[:, w], b[:, x] - 0.5 * b[:, w])
+        x2 = tf.minimum(a[:, x] + 0.5 * a[:, w], b[:, x] + 0.5 * b[:, w])
+        y1 = tf.maximum(a[:, y] - 0.5 * a[:, h], b[:, y] - 0.5 * b[:, h])
+        y2 = tf.minimum(a[:, y] + 0.5 * a[:, h], b[:, y] + 0.5 * b[:, h])
         intersection_area = tf.maximum((x2 - x1), 0) * tf.maximum((y2 - y1), 0)
 
         # calculate box area
-        a_area = a[w] * a[h]
-        b_area = b[w] * b[h]
+        a_area = a[:, w] * a[:, h]
+        b_area = b[:, w] * b[:, h]
 
         # calculate iou
         iou = intersection_area / (a_area + b_area - intersection_area)
@@ -141,7 +140,6 @@ class EncoderLayer(tf.keras.layers.Layer):
         enable lazy init of layer. build is executed on first __call__()
         """
         print('build the default boxes')
-
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()
