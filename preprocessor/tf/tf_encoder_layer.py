@@ -17,7 +17,7 @@ class EncoderLayer(tf.keras.layers.Layer):
                  s_k: float = 0.9,
                  s_k_alt: float = 0.89,
                  iou: float = 0.5,
-                 num_boxes: int = 6):
+                 num_boxes: int = 5):
         super(EncoderLayer, self).__init__()
 
         # provided values
