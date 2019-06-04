@@ -53,6 +53,12 @@ class TfEncoderSpec(tf.test.TestCase):
         tf.assert_equal(iou, [1, 0.25])
 
     @run_in_graph_and_eager_modes
+    def test_convert_index(self):
+        iou = tf.constant([5,6,7,6,5], dtype=tf.float32)
+        print(tf.where(tf.greater_equal(iou, 6)))
+        assert True
+
+    @run_in_graph_and_eager_modes
     def test_cartesian_calculation(self):
         a = tf.constant((1, 2))
         b = tf.constant((3, 4))

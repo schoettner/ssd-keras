@@ -114,6 +114,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         w = 2
         h = 3
 
+        # transfer to x_min, x_max coordinates
         x1 = tf.maximum(a[:, x] - 0.5 * a[:, w], b[:, x] - 0.5 * b[:, w])
         x2 = tf.minimum(a[:, x] + 0.5 * a[:, w], b[:, x] + 0.5 * b[:, w])
         y1 = tf.maximum(a[:, y] - 0.5 * a[:, h], b[:, y] - 0.5 * b[:, h])
@@ -126,7 +127,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         # calculate iou
         iou = intersection_area / (a_area + b_area - intersection_area)
-        return iou  # avoid rounding issues
+        return iou
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
@@ -134,6 +135,8 @@ class EncoderLayer(tf.keras.layers.Layer):
         c = tf.stack(tf.meshgrid(a, b, indexing='ij'), axis=-1)
         c = tf.reshape(c, (-1, 2))
         return c
+
+
 
     def build(self, input_shape):
         """
