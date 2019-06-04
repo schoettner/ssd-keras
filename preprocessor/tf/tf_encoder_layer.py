@@ -56,7 +56,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.class_predictions = tf.eye(num_classes, name='const_class_identity_matrix')
         self.label_output_shape = (*feature_map_size, num_boxes, num_classes + 4)
 
-        self.default_boxes = self.__calculate_default_boxes()
+        self.default_boxes = self.__calculate_default_boxes(cells_on_x=feature_map_size[0],
+                                                            cells_on_y=feature_map_size[1],
+                                                            img_width=img_width,
+                                                            img_height=img_height,
+                                                            num_boxes_per_cell=5)
 
     def __calculate_default_boxes(self,
                                   cells_on_x: int = 38,
@@ -86,21 +90,21 @@ class EncoderLayer(tf.keras.layers.Layer):
         center_y = tf.linspace(start=offset + cell_pixel_height,
                                stop=(offset + cells_on_y - 1) * cell_pixel_height,
                                num=cells_on_y)
-        cartesian = self.cartesian_product(center_x, center_y)
+        cartesian_center = self.cartesian_product(center_x, center_y)
         num_cells = cells_on_x * cells_on_y
-        # for each cell. add the boxes to the center
-        # e.g. box at 75,75 with boxes [[114,114][162,80][80,162]]
-        # will be
-        grid = K.repeat(cartesian, num_boxes_per_cell)
+        center_grid = K.repeat(cartesian_center, num_boxes_per_cell)
+        center_grid_full = tf.reshape(center_grid, shape=(num_cells * num_boxes_per_cell, 2))
         w_h = tf.tile(boxes_w_h, (num_cells, 1))
-        print(w_h)
-        # asdf = tf.concat((grid, boxes_w_h))
-        print('grid after repeat')
-        print(grid)
-        #[75, 75, 114, 114]
-        #[75, 75, 162, 80]
-        #[75, 75, 80, 162]
-        return cartesian
+        # w_h = tf.cast(w_h, dtype=tf.float32)
+
+        print("shape of grid: {}".format(center_grid_full.get_shape()))
+        print("grid: {}".format(center_grid_full))
+        print("shape of w_h: {}".format(w_h.get_shape()))
+        print("w_h: {}".format(w_h))
+
+        # default_boxes = tf.concat(w_h, grid)
+        # print(default_boxes)
+        return cartesian_center
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
@@ -123,10 +127,8 @@ class EncoderLayer(tf.keras.layers.Layer):
         return config
 
     def call(self, ground_truth: Tensor, **kwargs) -> Tensor:
-        print('call')
         # shape = feature map size, boxes of layer, 4 + num classes
         label = tf.zeros(shape=self.label_output_shape, name='encoded_label')
-        print(label.get_shape())
         return label
 
     def call_random(self) -> tuple:
