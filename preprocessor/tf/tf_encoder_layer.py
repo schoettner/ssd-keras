@@ -3,6 +3,7 @@ from tensorflow import Tensor
 
 import tensorflow.keras.backend as K
 
+
 class EncoderLayer(tf.keras.layers.Layer):
     """https://www.tensorflow.org/alpha/guide/keras/custom_layers_and_models
 
@@ -106,6 +107,27 @@ class EncoderLayer(tf.keras.layers.Layer):
         # print("default_boxes: {}".format(default_boxes))
         # print(default_boxes)
         return default_boxes
+
+    def calculate_iou(self, a: Tensor, b: Tensor) -> Tensor:
+        x = 0
+        y = 1
+        w = 2
+        h = 3
+
+        # calculate intersection
+        x1 = tf.maximum([a[x] - 0.5 * a[w], b[x] - 0.5 * b[w]])
+        x2 = tf.minimum([a[x] + 0.5 * a[w], b[x] + 0.5 * b[w]])
+        y1 = tf.maximum([a[y] - 0.5 * a[h], b[y] - 0.5 * b[h]])
+        y2 = tf.minimum([a[y] + 0.5 * a[h], b[y] + 0.5 * b[h]])
+        intersection_area = tf.maximum((x2 - x1), 0) * tf.maximum((y2 - y1), 0)
+
+        # calculate box area
+        a_area = a[w] * a[h]
+        b_area = b[w] * b[h]
+
+        # calculate iou
+        iou = intersection_area / (a_area + b_area - intersection_area)
+        return iou  # avoid rounding issues
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
