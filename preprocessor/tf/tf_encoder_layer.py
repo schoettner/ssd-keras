@@ -126,12 +126,22 @@ class EncoderLayer(tf.keras.layers.Layer):
         [cell_x][cell_y][default_box][geo_offset, one-hot label]
         the decoded the indices that
         """
-        assert a.dtype == tf.int64 or a.dtype == tf.int32, 'tensor is not of shape int, can not convert'
-        boxes = a // self.number_boxes
-        x = a // self.feature_map_size[0]
-        y = tf.mod(a,self.feature_map_size[1])
-        return tf.concat((x,y,boxes))
+        assert a.dtype == tf.int64, 'tensor is not of shape int, can not convert'
 
+        cells_on_map = self.feature_map_size[0] * self.feature_map_size[1]
+        cells_on_map = tf.cast(cells_on_map, dtype=a.dtype)
+        cell_index = tf.floor_div(a, cells_on_map) +1
+
+        cells_on_x = tf.cast(self.feature_map_size[0], dtype=a.dtype)
+        x = tf.floor_div(cell_index, cells_on_x)  # x = a // cells_on_x
+
+        cells_on_y = tf.cast(self.feature_map_size[1], dtype=a.dtype)
+        y = tf.mod(cell_index, cells_on_y)  # x = a % cells_on_y
+
+        num_boxes_tensor = tf.cast(self.number_boxes, dtype=a.dtype)
+        boxes = tf.mod(a, num_boxes_tensor)  # a % self.number_boxes
+
+        return tf.stack((x,y,boxes), axis=1)  # concat to (-1, 3)
 
     def set_values(self, boxes: Tensor):
         return tf.constant(0)

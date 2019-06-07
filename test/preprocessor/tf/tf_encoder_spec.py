@@ -8,11 +8,8 @@ class TfEncoderSpec(tf.test.TestCase):
 
     @run_in_graph_and_eager_modes
     def test_default_box_for_2_by_2_map(self):
-        encoder = EncoderLayer(feature_map_size=[2, 2],
-                               ratios=[1, 2, 3, 1/2, 1/3],
-                               s_k=0.76,
-                               s_k_alt=0.82,
-                               num_boxes=5,)
+        encoder = self.given_small_map_encoder()
+
         encoder(tf.constant(1))
         default_boxes = encoder.default_boxes
 
@@ -53,12 +50,13 @@ class TfEncoderSpec(tf.test.TestCase):
 
     @run_in_graph_and_eager_modes
     def test_convert_index(self):
-        iou = tf.constant([0.5, 0.2, 0.2, 0.5, 0.1], dtype=tf.float32)
-        indices = tf.where(tf.greater_equal(iou, 0.5))
-        print(indices)
-        encoder = EncoderLayer()
-        indices = encoder.decode_index(indices)
-        print(indices)
+        # iou = tf.constant([0.5, 0.2, 0.2, 0.5, 0.1], dtype=tf.float32)
+        # match_indices = tf.where(tf.greater_equal(iou, 0.5))
+        match_indices = tf.constant([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], dtype=tf.int64)
+        print('indices that match = {}'.format(match_indices))
+        encoder = self.given_small_map_encoder()
+        encoded_indices = encoder.decode_index(match_indices)
+        print('encoded indices = {}'.format(encoded_indices))
         assert True
 
     @run_in_graph_and_eager_modes
@@ -71,3 +69,11 @@ class TfEncoderSpec(tf.test.TestCase):
                      [2, 3],
                      [2, 4]]
         tf.assert_equal(c, cartesian)
+
+    @staticmethod
+    def given_small_map_encoder() -> EncoderLayer:
+        return EncoderLayer(feature_map_size=[2, 2],
+                            ratios=[1, 2, 3, 1 / 2, 1 / 3],
+                            s_k=0.76,
+                            s_k_alt=0.82,
+                            num_boxes=5, )
