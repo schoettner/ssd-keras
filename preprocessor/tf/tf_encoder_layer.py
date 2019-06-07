@@ -126,22 +126,22 @@ class EncoderLayer(tf.keras.layers.Layer):
         [cell_x][cell_y][default_box][geo_offset, one-hot label]
         the decoded the indices that
         """
-        assert a.dtype == tf.int64, 'tensor is not of shape int, can not convert'
-
-        cells_on_map = self.feature_map_size[0] * self.feature_map_size[1]
-        cells_on_map = tf.cast(cells_on_map, dtype=a.dtype)
-        cell_index = tf.floor_div(a, cells_on_map) +1
-
-        cells_on_x = tf.cast(self.feature_map_size[0], dtype=a.dtype)
-        x = tf.floor_div(cell_index, cells_on_x)  # x = a // cells_on_x
-
-        cells_on_y = tf.cast(self.feature_map_size[1], dtype=a.dtype)
-        y = tf.mod(cell_index, cells_on_y)  # x = a % cells_on_y
+        assert a.dtype == tf.int64, 'tensor is not of type int64, can not convert'
 
         num_boxes_tensor = tf.cast(self.number_boxes, dtype=a.dtype)
-        boxes = tf.mod(a, num_boxes_tensor)  # a % self.number_boxes
+        # index of the cell from 0..n required to calc x and y position of index
+        cell_index = tf.floor_div(a, num_boxes_tensor)
 
-        return tf.stack((x,y,boxes), axis=1)  # concat to (-1, 3)
+        cells_on_x = tf.cast(self.feature_map_size[0], dtype=a.dtype)
+        x = tf.floor_div(cell_index, cells_on_x)
+
+        cells_on_y = tf.cast(self.feature_map_size[1], dtype=a.dtype)
+        y = tf.mod(cell_index, cells_on_y)
+
+        boxes = tf.mod(a, num_boxes_tensor)
+
+        stacked = tf.stack((x,y,boxes), axis=1)  # concat to (-1, 3)
+        return tf.cast(stacked, dtype=tf.int32)
 
     def set_values(self, boxes: Tensor):
         return tf.constant(0)

@@ -53,11 +53,31 @@ class TfEncoderSpec(tf.test.TestCase):
         # iou = tf.constant([0.5, 0.2, 0.2, 0.5, 0.1], dtype=tf.float32)
         # match_indices = tf.where(tf.greater_equal(iou, 0.5))
         match_indices = tf.constant([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19], dtype=tf.int64)
-        print('indices that match = {}'.format(match_indices))
         encoder = self.given_small_map_encoder()
         encoded_indices = encoder.decode_index(match_indices)
-        print('encoded indices = {}'.format(encoded_indices))
-        assert True
+        expected = [
+            [0,0,0],
+            [0,0,1],
+            [0,0,2],
+            [0,0,3],
+            [0,0,4],
+            [0,1,0],
+            [0,1,1],
+            [0,1,2],
+            [0,1,3],
+            [0,1,4],
+            [1,0,0],
+            [1,0,1],
+            [1,0,2],
+            [1,0,3],
+            [1,0,4],
+            [1,1,0],
+            [1,1,1],
+            [1,1,2],
+            [1,1,3],
+            [1,1,4],
+        ]
+        tf.assert_equal(encoded_indices, expected)
 
     @run_in_graph_and_eager_modes
     def test_cartesian_calculation(self):
