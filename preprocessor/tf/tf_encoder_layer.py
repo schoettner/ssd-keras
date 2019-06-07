@@ -128,7 +128,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     @staticmethod
     def calculate_geometry_difference(ground_truth: Tensor, default_box: Tensor) -> Tensor:
-        return tf.subtract(default_box, ground_truth)
+        return tf.subtract(default_box, ground_truth,)
 
     @staticmethod
     def calculate_iou(a: Tensor, b: Tensor) -> Tensor:

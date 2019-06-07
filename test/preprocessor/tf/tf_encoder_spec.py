@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 from tensorflow.python.framework.test_util import run_in_graph_and_eager_modes
 
 from preprocessor.tf.tf_encoder_layer import EncoderLayer
@@ -89,6 +90,16 @@ class TfEncoderSpec(tf.test.TestCase):
                      [2, 3],
                      [2, 4]]
         tf.assert_equal(c, cartesian)
+
+    @run_in_graph_and_eager_modes
+    def test_geometry_difference(self):
+        a = tf.constant([75, 75, 114, 114], dtype=tf.float32)
+        b = tf.constant([80, 80, 120, 120], dtype=tf.float32)
+
+        c = self.given_small_map_encoder().calculate_geometry_difference(a,b)
+        expected = np.array([5.0, 5.0, 6.0, 6.0], dtype=np.float32)
+        print(c)
+        tf.assert_equal(c, expected)
 
     @staticmethod
     def given_small_map_encoder() -> EncoderLayer:
