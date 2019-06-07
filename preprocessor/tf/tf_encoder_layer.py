@@ -98,27 +98,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         default_boxes = tf.concat([center_grid_full, w_h], axis=1)
         return default_boxes
 
-    @staticmethod
-    def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
-        x = 0
-        y = 1
-        w = 2
-        h = 3
 
-        # transfer to x_min, x_max coordinates
-        x1 = tf.maximum(a[:, x] - 0.5 * a[:, w], b[:, x] - 0.5 * b[:, w])
-        x2 = tf.minimum(a[:, x] + 0.5 * a[:, w], b[:, x] + 0.5 * b[:, w])
-        y1 = tf.maximum(a[:, y] - 0.5 * a[:, h], b[:, y] - 0.5 * b[:, h])
-        y2 = tf.minimum(a[:, y] + 0.5 * a[:, h], b[:, y] + 0.5 * b[:, h])
-        intersection_area = tf.maximum((x2 - x1), 0) * tf.maximum((y2 - y1), 0)
-
-        # calculate box area
-        a_area = a[:, w] * a[:, h]
-        b_area = b[:, w] * b[:, h]
-
-        # calculate iou
-        iou = intersection_area / (a_area + b_area - intersection_area)
-        return iou
 
     def decode_index(self, a: Tensor) -> Tensor:
         """
@@ -145,6 +125,32 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     def set_values(self, boxes: Tensor):
         return tf.constant(0)
+
+    @staticmethod
+    def calculate_geometry_difference(ground_truth: Tensor, default_box: Tensor) -> Tensor:
+        return tf.subtract(default_box, ground_truth)
+
+    @staticmethod
+    def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
+        x = 0
+        y = 1
+        w = 2
+        h = 3
+
+        # transfer to x_min, x_max coordinates
+        x1 = tf.maximum(a[:, x] - 0.5 * a[:, w], b[:, x] - 0.5 * b[:, w])
+        x2 = tf.minimum(a[:, x] + 0.5 * a[:, w], b[:, x] + 0.5 * b[:, w])
+        y1 = tf.maximum(a[:, y] - 0.5 * a[:, h], b[:, y] - 0.5 * b[:, h])
+        y2 = tf.minimum(a[:, y] + 0.5 * a[:, h], b[:, y] + 0.5 * b[:, h])
+        intersection_area = tf.maximum((x2 - x1), 0) * tf.maximum((y2 - y1), 0)
+
+        # calculate box area
+        a_area = a[:, w] * a[:, h]
+        b_area = b[:, w] * b[:, h]
+
+        # calculate iou
+        iou = intersection_area / (a_area + b_area - intersection_area)
+        return iou
 
     @staticmethod
     def cartesian_product(a: Tensor, b: Tensor) -> Tensor:
