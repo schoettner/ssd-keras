@@ -1,7 +1,6 @@
 import tensorflow as tf
-from tensorflow import Tensor
-
 import tensorflow.keras.backend as K
+from tensorflow import Tensor
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -121,8 +120,20 @@ class EncoderLayer(tf.keras.layers.Layer):
         iou = intersection_area / (a_area + b_area - intersection_area)
         return iou
 
-    @staticmethod
-    def set_values(boxes: Tensor, default_boxes: Tensor):
+    def decode_index(self, a: Tensor) -> Tensor:
+        """
+        decode the index. converts an index to the direct coordinate in the scale
+        [cell_x][cell_y][default_box][geo_offset, one-hot label]
+        the decoded the indices that
+        """
+        assert a.dtype == tf.int64 or a.dtype == tf.int32, 'tensor is not of shape int, can not convert'
+        boxes = a // self.number_boxes
+        x = a // self.feature_map_size[0]
+        y = tf.mod(a,self.feature_map_size[1])
+        return tf.concat((x,y,boxes))
+
+
+    def set_values(self, boxes: Tensor):
         return tf.constant(0)
 
     @staticmethod
@@ -136,6 +147,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         """
         enable lazy init of layer. build is executed on first __call__()
         """
+        print('build was called')
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()

@@ -13,7 +13,7 @@ class TfEncoderSpec(tf.test.TestCase):
                                s_k=0.76,
                                s_k_alt=0.82,
                                num_boxes=5,)
-        label = encoder(tf.constant(1))
+        encoder(tf.constant(1))
         default_boxes = encoder.default_boxes
 
         expected_boxes = [
@@ -53,8 +53,12 @@ class TfEncoderSpec(tf.test.TestCase):
 
     @run_in_graph_and_eager_modes
     def test_convert_index(self):
-        iou = tf.constant([5, 6, 7, 6, 5], dtype=tf.float32)
-        print(tf.where(tf.greater_equal(iou, 6)))
+        iou = tf.constant([0.5, 0.2, 0.2, 0.5, 0.1], dtype=tf.float32)
+        indices = tf.where(tf.greater_equal(iou, 0.5))
+        print(indices)
+        encoder = EncoderLayer()
+        indices = encoder.decode_index(indices)
+        print(indices)
         assert True
 
     @run_in_graph_and_eager_modes
