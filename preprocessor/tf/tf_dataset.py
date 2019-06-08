@@ -31,7 +31,7 @@ def _encode_label(image, label, encoder: EncoderLayer):
 
     """
     encoded_label = encoder(label)
-    encoded_label = encoder.call_random()
+    encoded_label = EncoderLayer.call_random()
     return image, encoded_label
 
 

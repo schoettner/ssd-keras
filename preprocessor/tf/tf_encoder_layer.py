@@ -55,12 +55,52 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.class_predictions = tf.eye(num_classes, name='const_class_identity_matrix')
         self.label_output_shape = (*feature_map_size, num_boxes, num_classes + 4)
+        self.num_boxes_on_layer = feature_map_size[0] * feature_map_size[1], num_boxes
 
         self.default_boxes = self.__calculate_default_boxes(cells_on_x=feature_map_size[0],
                                                             cells_on_y=feature_map_size[1],
                                                             img_width=img_width,
                                                             img_height=img_height,
                                                             num_boxes_per_cell=num_boxes)
+
+    def build(self, input_shape):
+        """
+        enable lazy init of layer. build is executed on first __call__()
+        """
+        print('build was called')
+
+    def get_config(self):
+        config = super(EncoderLayer, self).get_config()
+        config.update({})
+        # required for the layer to be serializable
+        return config
+
+    def call(self, ground_truth: Tensor, **kwargs) -> Tensor:
+        # shape = feature map size, boxes of layer, 4 + num classes
+
+        label = tf.zeros(shape=self.label_output_shape, name='encoded_label')
+        if ground_truth is None:
+            return label
+
+        num_boxes_on_layer = self.label_output_shape[0] * self.label_output_shape[1] * self.label_output_shape[2]
+        ground_truth_box = ground_truth[:, 1:]
+        repeated_box = K.repeat(ground_truth_box, num_boxes_on_layer)
+        repeated_ground_truth = tf.cast(repeated_box, dtype=tf.float32)
+        print('boxes: {}'.format(repeated_ground_truth))
+        print('default: {}'.format(self.default_boxes))
+        matches = self.calculate_iou(self.default_boxes[:,:,], repeated_ground_truth)
+        return matches
+
+    @staticmethod
+    def call_random() -> tuple:
+        scale1 = tf.random_uniform(shape=[38, 38, 4, 6], dtype=tf.float32)
+        scale2 = tf.random_uniform(shape=[19, 19, 6, 6], dtype=tf.float32)
+        scale3 = tf.random_uniform(shape=[10, 10, 6, 6], dtype=tf.float32)
+        scale4 = tf.random_uniform(shape=[5, 5, 6, 6], dtype=tf.float32)
+        scale5 = tf.random_uniform(shape=[3, 3, 4, 6], dtype=tf.float32)
+        scale6 = tf.random_uniform(shape=[1, 1, 4, 6], dtype=tf.float32)
+        encoded_label = (scale1, scale2, scale3, scale4, scale5, scale6)
+        return encoded_label
 
     def __calculate_default_boxes(self,
                                   cells_on_x: int = 38,
@@ -98,8 +138,6 @@ class EncoderLayer(tf.keras.layers.Layer):
         default_boxes = tf.concat([center_grid_full, w_h], axis=1)
         return default_boxes
 
-
-
     def decode_index(self, a: Tensor) -> Tensor:
         """
         decode the index. converts an index to the direct coordinate in the scale
@@ -120,15 +158,12 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         boxes = tf.mod(a, num_boxes_tensor)
 
-        stacked = tf.stack((x,y,boxes), axis=1)  # concat to (-1, 3)
+        stacked = tf.stack((x, y, boxes), axis=1)  # concat to (-1, 3)
         return tf.cast(stacked, dtype=tf.int32)
-
-    def set_values(self, boxes: Tensor):
-        return tf.constant(0)
 
     @staticmethod
     def calculate_geometry_difference(ground_truth: Tensor, default_box: Tensor) -> Tensor:
-        return tf.subtract(default_box, ground_truth,)
+        return tf.subtract(default_box, ground_truth)
 
     @staticmethod
     def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
@@ -158,30 +193,3 @@ class EncoderLayer(tf.keras.layers.Layer):
         c = tf.stack(tf.meshgrid(a, b, indexing='ij'), axis=-1)
         c = tf.reshape(c, (-1, 2))
         return c
-
-    def build(self, input_shape):
-        """
-        enable lazy init of layer. build is executed on first __call__()
-        """
-        print('build was called')
-
-    def get_config(self):
-        config = super(EncoderLayer, self).get_config()
-        config.update({})
-        # required for the layer to be serializable
-        return config
-
-    def call(self, ground_truth: Tensor, **kwargs) -> Tensor:
-        # shape = feature map size, boxes of layer, 4 + num classes
-        label = tf.zeros(shape=self.label_output_shape, name='encoded_label')
-        return label
-
-    def call_random(self) -> tuple:
-        scale1 = tf.random_uniform(shape=[38, 38, 4, 6], dtype=tf.float32)
-        scale2 = tf.random_uniform(shape=[19, 19, 6, 6], dtype=tf.float32)
-        scale3 = tf.random_uniform(shape=[10, 10, 6, 6], dtype=tf.float32)
-        scale4 = tf.random_uniform(shape=[5, 5, 6, 6], dtype=tf.float32)
-        scale5 = tf.random_uniform(shape=[3, 3, 4, 6], dtype=tf.float32)
-        scale6 = tf.random_uniform(shape=[1, 1, 4, 6], dtype=tf.float32)
-        encoded_label = (scale1, scale2, scale3, scale4, scale5, scale6)
-        return encoded_label
