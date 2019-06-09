@@ -86,10 +86,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         ground_truth_box = ground_truth[:, 1:]
         repeated_box = K.repeat(ground_truth_box, num_boxes_on_layer)
         repeated_ground_truth = tf.cast(repeated_box, dtype=tf.float32)
-        print('boxes: {}'.format(repeated_ground_truth))
-        print('default: {}'.format(self.default_boxes))
-        matches = self.calculate_iou(self.default_boxes[:,:,], repeated_ground_truth)
-        return matches
+        iou = self.calculate_iou(self.default_boxes[:, :, ], repeated_ground_truth)
+        matches = tf.where(tf.greater_equal(iou, self.iou_threshold))
+        indices = self.decode_index(matches)
+        self.set_values(indices, matches, ground_truth, label)
+        return label
 
     @staticmethod
     def call_random() -> tuple:
@@ -138,6 +139,27 @@ class EncoderLayer(tf.keras.layers.Layer):
         default_boxes = tf.concat([center_grid_full, w_h], axis=1)
         return default_boxes
 
+    def set_values(self,
+                   indices_label: Tensor,
+                   indices_default_box: Tensor,
+                   ground_truth: Tensor,
+                   label: Tensor):
+        """ set the geometry and class value everywhere where the indices match
+        """
+        # todo
+        # index_label = indices_label[0]
+        # print(index_label)
+        # index_default_box = indices_default_box[0]
+        # print(index_default_box)
+        # class_prediction = self.class_predictions[ground_truth[0]]
+        # print(class_prediction)
+        # geo_diff = self.calculate_geometry_difference(ground_truth[1:],
+        #                                               self.default_boxes[index_default_box])
+        # print(geo_diff)
+        # label[index_label, 0:5] = geo_diff
+        # label[index_label, 5:] = class_prediction
+
+
     def decode_index(self, a: Tensor) -> Tensor:
         """
         decode the index. converts an index to the direct coordinate in the scale
@@ -167,6 +189,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     @staticmethod
     def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
+        b = b[0]  # just take one box from the tensor for the moment
         x = 0
         y = 1
         w = 2
