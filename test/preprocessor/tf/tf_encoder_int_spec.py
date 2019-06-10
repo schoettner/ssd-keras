@@ -9,7 +9,7 @@ class TfEncoderIntSpec(tf.test.TestCase):
     @run_in_graph_and_eager_modes
     def test_small_feature_map(self):
         # with tf.Session() as sess:
-        ground_truth = tf.constant(([0, 15, 15, 7, 7],
+        ground_truth = tf.constant(([0, 75, 75, 114, 114],
                                     [0, 15, 15, 7, 7]), dtype=tf.int32)
         encoder = self.given_small_map_encoder()
         label = encoder.call(ground_truth)

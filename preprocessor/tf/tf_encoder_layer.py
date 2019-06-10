@@ -147,19 +147,22 @@ class EncoderLayer(tf.keras.layers.Layer):
         """ set the geometry and class value everywhere where the indices match
         """
         # todo
-        # index_label = indices_label[0]
-        # print('index in label: {}'.format(index_label))
-        # index_default_box = indices_default_box[0]
-        # print('default_box_index: {}'.format(index_default_box))
-        # # class_label = ground_truth[0]
-        # print('label: {}'.format(class_label))
-        # class_prediction = self.class_predictions[ground_truth[0]]
-        # print(class_prediction)
+        print('label: {}'.format(label))
+        print('ground truth: {}'.format(ground_truth))
+        index_label = indices_label[0]
+        print('index in label: {}'.format(index_label))
+        index_default_box = indices_default_box[0]
+        print('default_box_index: {}'.format(index_default_box))
+        class_label = ground_truth[0][0]
+        print('class: {}'.format(class_label))
+        class_prediction = self.class_predictions[class_label]
+        print('class_prediction: {}'.format(class_prediction))
         # geo_diff = self.calculate_geometry_difference(ground_truth[1:], self.default_boxes[index_default_box])
         # print(geo_diff)
         # label[index_label, 0:5] = geo_diff
-        # label[index_label, 5:] = class_prediction
-
+        # label[0][0][0][5:] = class_prediction[:]
+        print('class_pred in label: {}'.format(label[0,0,0, 5:]))
+        # label[index_label,5:].assign(class_prediction)
 
     def decode_index(self, a: Tensor) -> Tensor:
         """
