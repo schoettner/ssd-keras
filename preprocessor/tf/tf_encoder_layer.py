@@ -148,13 +148,14 @@ class EncoderLayer(tf.keras.layers.Layer):
         """
         # todo
         # index_label = indices_label[0]
-        # print(index_label)
+        # print('index in label: {}'.format(index_label))
         # index_default_box = indices_default_box[0]
-        # print(index_default_box)
+        # print('default_box_index: {}'.format(index_default_box))
+        # # class_label = ground_truth[0]
+        # print('label: {}'.format(class_label))
         # class_prediction = self.class_predictions[ground_truth[0]]
         # print(class_prediction)
-        # geo_diff = self.calculate_geometry_difference(ground_truth[1:],
-        #                                               self.default_boxes[index_default_box])
+        # geo_diff = self.calculate_geometry_difference(ground_truth[1:], self.default_boxes[index_default_box])
         # print(geo_diff)
         # label[index_label, 0:5] = geo_diff
         # label[index_label, 5:] = class_prediction
@@ -189,6 +190,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     @staticmethod
     def calculate_iou(a: Tensor, b: Tensor) -> Tensor:
+        # todo fix this
         b = b[0]  # just take one box from the tensor for the moment
         x = 0
         y = 1
