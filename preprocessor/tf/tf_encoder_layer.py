@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow import Tensor
+from tensorflow import Tensor, SparseTensor
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -76,11 +76,9 @@ class EncoderLayer(tf.keras.layers.Layer):
         return config
 
     def call(self, ground_truth: Tensor, **kwargs) -> Tensor:
-        # shape = feature map size, boxes of layer, 4 + num classes
 
-        label = tf.zeros(shape=self.label_output_shape, name='encoded_label')
         if ground_truth is None:
-            return label
+            return tf.zeros(shape=self.label_output_shape, name='empty_label')
 
         num_boxes_on_layer = self.label_output_shape[0] * self.label_output_shape[1] * self.label_output_shape[2]
         ground_truth_box = ground_truth[:, 1:]
@@ -89,7 +87,8 @@ class EncoderLayer(tf.keras.layers.Layer):
         iou = self.calculate_iou(self.default_boxes[:, :, ], repeated_ground_truth)
         matches = tf.where(tf.greater_equal(iou, self.iou_threshold))
         indices = self.decode_index(matches)
-        self.set_values(indices, matches, ground_truth, label)
+        sparse_label = self.set_values(indices, matches, ground_truth)
+        label = tf.sparse.to_dense(sparse_label)
         return label
 
     @staticmethod
@@ -142,28 +141,17 @@ class EncoderLayer(tf.keras.layers.Layer):
     def set_values(self,
                    indices_label: Tensor,
                    indices_default_box: Tensor,
-                   ground_truth: Tensor,
-                   label: Tensor):
+                   ground_truth: Tensor) -> Tensor:
         """ set the geometry and class value everywhere where the indices match
         """
-        # todo
-        # print('label: {}'.format(label))
-        # print('ground truth: {}'.format(ground_truth))
         index_label = indices_label[0]
         index_label_flat = tf.reshape(index_label, shape=[3])  # index in label as flat vector (for concat + sparse)
-
-        # print('index in label: {}'.format(index_label))
-        # index_default_box = indices_default_box[0]
-        # print('default_box_index: {}'.format(index_default_box))
 
         # create a sparse tensor with the box prediction
         box_geometry = ground_truth[0][1:]  # get the geometry data from ground truth
         box_geometry = tf.cast(box_geometry, dtype=tf.float32)
-        print("box_geometry: {}".format(box_geometry))
-        index_default_box = indices_default_box[0]  # get the indices of the best matching default boxes
-        print("default_box_index: {}".format(index_default_box))
-        default_box = self.default_boxes[0]
-        print("default_box_geometry: {}".format(default_box))
+        index_default_box = indices_default_box[0][0]  # get the indices of the best matching default boxes
+        default_box = self.default_boxes[index_default_box]
 
         geo_diff = self.calculate_geometry_difference(box_geometry, default_box)
         x_index = tf.constant(0, dtype=tf.int32, shape=[1])
@@ -178,18 +166,23 @@ class EncoderLayer(tf.keras.layers.Layer):
                                                     label_y_index,
                                                     label_w_index,
                                                     label_h_index],  # create a sparse tensor that sets the value
-                                             values=geo_diff,
-                                             dense_shape=self.label_output_shape)
-        print('box label: {}'.format(tf.sparse.to_dense(sparse_box_label)))
+                                           values=geo_diff,
+                                           dense_shape=self.label_output_shape)
+        # print('box label: {}'.format(tf.sparse.to_dense(sparse_box_label)))
 
         # create a sparse tensor with the class prediction
         class_id = ground_truth[0][0]  # get the class id from the ground truth box
         class_index = tf.constant(4, dtype=tf.int32, shape=[1]) + class_id  # get the index of the correct class in label
         label_class_index = tf.concat([index_label_flat, class_index], axis=0)  # concat to the absolute class coordinate
         sparse_class_label = tf.SparseTensor(indices=[label_class_index],  # create a sparse tensor that sets the value
-                                             values=[1],  # set the classification for this class to 100%
+                                             values=[1.0],  # set the classification for this class to 100%
                                              dense_shape=self.label_output_shape)
-        print('class: {}'.format(tf.sparse.to_dense(sparse_class_label)))
+
+        # print('class: {}'.format(tf.sparse.to_dense(sparse_class_label)))
+        # add is not the best operation but fits the needs for the moment
+        # single tf.SparseTensor init would also be an option
+        sparse_label = tf.sparse_add(sparse_class_label, sparse_box_label)
+        return sparse_label
 
     def decode_index(self, a: Tensor) -> Tensor:
         """
