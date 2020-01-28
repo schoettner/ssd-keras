@@ -1,5 +1,5 @@
 pytest
-tensorflow==1.13.1
+tensorflow==1.15.2
 pillow==6.0.0
 pydot
 numpy
